@@ -23,16 +23,10 @@ class handler(BaseHTTPRequestHandler):
                 self.send_error(400, "Missing required fields")
                 return
             
-            # Simple mock registration (will add Supabase later)
-            user_id = f"user_{len(users_db) + 1}"
-            users_db[user_id] = {
-                "id": user_id,
-                "email": email,
-                "name": name,
-                "password": password
-            }
+            # Simple mock registration - generate consistent user ID from email
+            import hashlib
+            user_id = hashlib.md5(email.encode()).hexdigest()[:8]
             token = f"mock_token_{user_id}"
-            sessions[token] = user_id
             
             result = {
                 "message": "User registered successfully",
