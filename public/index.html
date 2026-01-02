@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Beer App</title>
+    <style>
+        body { font-family: Arial; text-align: center; padding: 50px; }
+        .btn { padding: 10px 20px; margin: 10px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>🍺 Beer App</h1>
+    <p>Your Beer Web App is live!</p>
+    
+    <div>
+        <h3>Test API Endpoints:</h3>
+        <button class="btn" onclick="testAPI('/api/beers/all')">Get All Beers</button>
+        <button class="btn" onclick="testAPI('/api/leaderboard')">Get Leaderboard</button>
+    </div>
+    
+    <div id="result" style="margin-top: 20px; padding: 20px; background: #f5f5f5; border-radius: 4px;"></div>
+    
+    <script>
+        async function testAPI(endpoint) {
+            try {
+                const response = await fetch(endpoint);
+                const data = await response.json();
+                document.getElementById('result').innerHTML = 
+                    '<h4>' + endpoint + '</h4>' +
+                    '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            } catch (error) {
+                document.getElementById('result').innerHTML = 
+                    '<h4>Error testing ' + endpoint + '</h4>' +
+                    '<pre>' + error.message + '</pre>';
+            }
+        }
+        
+        // Test on page load
+        testAPI('/api/beers/all');
+    </script>
+</body>
+</html>
