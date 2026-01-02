@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Beer App</title>
+    <style>
+        body { font-family: Arial; text-align: center; padding: 50px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .btn { padding: 12px 24px; margin: 10px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        .btn:hover { background: #5a67d8; }
+        #result { margin-top: 20px; padding: 20px; background: #f8f9fa; border-radius: 4px; text-align: left; }
+        pre { background: #e9ecef; padding: 15px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍺 Beer Web App</h1>
+        <p>Welcome to your Beer tracking application!</p>
+        
+        <div>
+            <h3>Test API Endpoints:</h3>
+            <button class="btn" onclick="testAPI('/api/beers/all')">📋 Get All Beers</button>
+            <button class="btn" onclick="testAPI('/api/leaderboard')">🏆 Get Leaderboard</button>
+            <button class="btn" onclick="testRegistration()">👤 Test Registration</button>
+        </div>
+        
+        <div id="result">
+            <h4>Ready to test...</h4>
+            <p>Click a button above to test the API endpoints.</p>
+        </div>
+    </div>
+    
+    <script>
+        async function testAPI(endpoint) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<h4>Testing ' + endpoint + '...</h4><p>Loading...</p>';
+            
+            try {
+                const response = await fetch(endpoint);
+                const data = await response.json();
+                resultDiv.innerHTML = 
+                    '<h4>✅ ' + endpoint + ' (Status: ' + response.status + ')</h4>' +
+                    '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            } catch (error) {
+                resultDiv.innerHTML = 
+                    '<h4>❌ Error testing ' + endpoint + '</h4>' +
+                    '<pre>Error: ' + error.message + '</pre>';
+            }
+        }
+        
+        async function testRegistration() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<h4>Testing user registration...</h4><p>Loading...</p>';
+            
+            try {
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: 'testuser',
+                        password: 'test123',
+                        name: 'Test User'
+                    })
+                });
+                const data = await response.json();
+                resultDiv.innerHTML = 
+                    '<h4>✅ Registration Test (Status: ' + response.status + ')</h4>' +
+                    '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            } catch (error) {
+                resultDiv.innerHTML = 
+                    '<h4>❌ Registration Error</h4>' +
+                    '<pre>Error: ' + error.message + '</pre>';
+            }
+        }
+        
+        // Test API on page load
+        window.onload = function() {
+            testAPI('/api/beers/all');
+        };
+    </script>
+</body>
+</html>
