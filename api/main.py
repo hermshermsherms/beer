@@ -1,7 +1,7 @@
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Header
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 import os
 from datetime import datetime
 
@@ -39,12 +39,12 @@ except ImportError:
     USE_SUPABASE = False
 
 class UserCreate(BaseModel):
-    username: str
+    email: str
     password: str
     name: str
 
 class UserLogin(BaseModel):
-    username: str
+    email: str
     password: str
 
 def get_current_user_from_token(authorization: str = None):
@@ -66,11 +66,11 @@ async def register(user: UserCreate):
         try:
             # Create user with Supabase Auth
             response = supabase.auth.sign_up({
-                "email": f"{user.username}@beerapp.local",
+                "email": user.email,
                 "password": user.password,
                 "options": {
                     "data": {
-                        "username": user.username,
+                        "email": user.email,
                         "name": user.name
                     }
                 }
@@ -80,11 +80,15 @@ async def register(user: UserCreate):
                 # Insert user profile
                 supabase.table("users").insert({
                     "id": response.user.id,
-                    "username": user.username,
+                    "email": user.email,
                     "name": user.name
                 }).execute()
                 
-                return {"message": "User registered successfully", "user_id": response.user.id, "access_token": "supabase_token"}
+                user_id = response.user.id
+                token = f"supabase_token_{user_id}"
+                sessions[token] = user_id
+                current_user_id = user_id
+                return {"message": "User registered successfully", "user_id": user_id, "access_token": token}
         except Exception as e:
             # Fallback to mock
             pass
@@ -93,12 +97,14 @@ async def register(user: UserCreate):
     user_id = f"user_{len(users_db) + 1}"
     users_db[user_id] = {
         "id": user_id,
-        "username": user.username,
+        "email": user.email,
         "name": user.name,
         "password": user.password
     }
+    token = f"mock_token_{user_id}"
+    sessions[token] = user_id
     current_user_id = user_id
-    return {"message": "User registered successfully (mock)", "user_id": user_id, "access_token": f"token_{user_id}"}
+    return {"message": "User registered successfully (mock)", "user_id": user_id, "access_token": token}
 
 @app.post("/api/login")
 async def login(user: UserLogin):
@@ -108,7 +114,7 @@ async def login(user: UserLogin):
         try:
             # Try Supabase authentication
             response = supabase.auth.sign_in_with_password({
-                "email": f"{user.username}@beerapp.local",
+                "email": user.email,
                 "password": user.password
             })
             
@@ -128,7 +134,7 @@ async def login(user: UserLogin):
     
     # Mock authentication fallback
     for uid, u in users_db.items():
-        if u["username"] == user.username and u["password"] == user.password:
+        if u["email"] == user.email and u["password"] == user.password:
             token = f"mock_token_{uid}"
             sessions[token] = uid
             current_user_id = uid
@@ -144,7 +150,7 @@ async def login(user: UserLogin):
 async def post_beer(
     note: str = Form(...), 
     image: UploadFile = File(...),
-    authorization: str = None
+    authorization: Optional[str] = Header(None)
 ):
     user_id = get_current_user_from_token(authorization)
     if not user_id:

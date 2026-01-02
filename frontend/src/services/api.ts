@@ -1,7 +1,7 @@
 import { API_BASE } from '../config'
 
 export interface User {
-  username: string
+  email: string
   password: string
   name?: string
 }

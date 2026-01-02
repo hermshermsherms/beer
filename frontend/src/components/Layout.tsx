@@ -1,6 +1,14 @@
 import { Link, Outlet } from 'react-router-dom'
+import { useAuth } from './AuthContext'
 
 function Layout() {
+  const { logout } = useAuth()
+
+  const handleLogout = () => {
+    logout()
+    // Navigation will be handled automatically by the auth routing
+  }
+
   return (
     <>
       <nav className="nav">
@@ -13,7 +21,21 @@ function Layout() {
             <li><Link to="/my-beers">My Beers</Link></li>
             <li><Link to="/all-beers">All Beers</Link></li>
             <li><Link to="/leaderboard">Leaderboard</Link></li>
-            <li><Link to="/login">Logout</Link></li>
+            <li>
+              <button 
+                onClick={handleLogout}
+                style={{ 
+                  background: 'none', 
+                  border: 'none', 
+                  color: '#333', 
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  fontSize: 'inherit'
+                }}
+              >
+                Logout
+              </button>
+            </li>
           </ul>
         </div>
       </nav>

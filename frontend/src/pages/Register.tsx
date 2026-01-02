@@ -1,13 +1,15 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../services/api'
+import { useAuth } from '../components/AuthContext'
 
 function Register() {
-  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [name, setName] = useState('')
   const navigate = useNavigate()
+  const { login } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -18,8 +20,9 @@ function Register() {
     }
 
     try {
-      const response = await api.register({ username, password, name })
+      const response = await api.register({ email, password, name })
       console.log('Registration successful:', response)
+      login(response.access_token)  // Update auth state
       navigate('/')
     } catch (error: any) {
       console.error('Registration failed:', error)
@@ -35,12 +38,12 @@ function Register() {
         </h2>
         
         <div className="form-group">
-          <label htmlFor="username">Username</label>
+          <label htmlFor="email">Email</label>
           <input
-            type="text"
-            id="username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            type="email"
+            id="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             required
           />
         </div>
