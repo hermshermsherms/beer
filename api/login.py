@@ -23,27 +23,47 @@ class handler(BaseHTTPRequestHandler):
                 self.send_error(400, "Missing email or password")
                 return
             
-            # Simple working login - accept demo password or any password for testing
-            if password == "demo123" or len(password) > 3:
+            # Check credentials against Supabase users table
+            try:
                 import hashlib
-                user_id = hashlib.md5(email.encode()).hexdigest()[:8]
-                token = f"token_{user_id}"
+                password_hash = hashlib.sha256(password.encode()).hexdigest()
                 
-                result = {
-                    "access_token": token,
-                    "user_id": user_id,
-                    "message": "Logged in successfully"
-                }
+                # Query users table for matching email and password
+                req = urllib.request.Request(
+                    f"{SUPABASE_URL}/rest/v1/users?email=eq.{email}&password_hash=eq.{password_hash}&select=id,email,name",
+                    headers={
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': f'Bearer {SUPABASE_ANON_KEY}'
+                    }
+                )
                 
-                self.send_response(200)
-                self.send_header('Content-type', 'application/json')
-                self.send_header('Access-Control-Allow-Origin', '*')
-                self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
-                self.send_header('Access-Control-Allow-Headers', 'Content-Type')
-                self.end_headers()
-                self.wfile.write(json.dumps(result).encode())
-                return
-            else:
+                with urllib.request.urlopen(req) as response:
+                    users = json.loads(response.read().decode('utf-8'))
+                    
+                if users and len(users) > 0:
+                    # User found - login successful
+                    user = users[0]
+                    result = {
+                        "access_token": f"token_{user['id']}",
+                        "user_id": user['id'],
+                        "message": "Logged in successfully"
+                    }
+                    
+                    self.send_response(200)
+                    self.send_header('Content-type', 'application/json')
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
+                    self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+                    self.end_headers()
+                    self.wfile.write(json.dumps(result).encode())
+                    return
+                else:
+                    # No user found - invalid credentials
+                    self.send_error(401, "Invalid credentials")
+                    return
+                    
+            except Exception as e:
+                print(f"Login error: {e}")
                 self.send_error(401, "Invalid credentials")
             
         except Exception as e:
