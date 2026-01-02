@@ -15,10 +15,27 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mock data storage (in production, use Supabase)
+# Environment variables for Supabase
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY")
+
+# Mock data storage (fallback if Supabase not available)
 users_db = {}
 beers_db = []
 current_user_id = None
+
+# Try to import Supabase, fallback to mock if not available
+try:
+    from supabase import create_client, Client
+    if SUPABASE_URL and SUPABASE_ANON_KEY:
+        supabase: Client = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+        USE_SUPABASE = True
+    else:
+        supabase = None
+        USE_SUPABASE = False
+except ImportError:
+    supabase = None
+    USE_SUPABASE = False
 
 class UserCreate(BaseModel):
     username: str
@@ -32,6 +49,35 @@ class UserLogin(BaseModel):
 @app.post("/api/register")
 async def register(user: UserCreate):
     global current_user_id
+    
+    if USE_SUPABASE:
+        try:
+            # Create user with Supabase Auth
+            response = supabase.auth.sign_up({
+                "email": f"{user.username}@beerapp.local",
+                "password": user.password,
+                "options": {
+                    "data": {
+                        "username": user.username,
+                        "name": user.name
+                    }
+                }
+            })
+            
+            if response.user:
+                # Insert user profile
+                supabase.table("users").insert({
+                    "id": response.user.id,
+                    "username": user.username,
+                    "name": user.name
+                }).execute()
+                
+                return {"message": "User registered successfully", "user_id": response.user.id, "access_token": "supabase_token"}
+        except Exception as e:
+            # Fallback to mock
+            pass
+    
+    # Mock fallback
     user_id = f"user_{len(users_db) + 1}"
     users_db[user_id] = {
         "id": user_id,
@@ -40,7 +86,7 @@ async def register(user: UserCreate):
         "password": user.password
     }
     current_user_id = user_id
-    return {"message": "User registered successfully", "user_id": user_id, "access_token": f"token_{user_id}"}
+    return {"message": "User registered successfully (mock)", "user_id": user_id, "access_token": f"token_{user_id}"}
 
 @app.post("/api/login")
 async def login(user: UserLogin):
