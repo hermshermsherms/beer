@@ -19,8 +19,16 @@
       "dest": "api/main.py"
     },
     {
-      "src": "/(.*)",
+      "src": "/static/(.*)",
+      "dest": "public/static/$1"
+    },
+    {
+      "src": "/(.*\\.(js|css|ico|png|jpg|jpeg|gif|svg))",
       "dest": "public/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "public/index.html"
     }
   ]
 }
