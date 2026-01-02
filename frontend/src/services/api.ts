@@ -43,10 +43,12 @@ class ApiService {
       ...options.headers,
     }
     
-    if (token && !headers['Authorization']) {
+    // Always add Authorization header if we have a token
+    if (token) {
       headers['Authorization'] = `Bearer ${token}`
     }
     
+    // Only add Content-Type for JSON, not for FormData
     if (options.body && typeof options.body === 'object' && !(options.body instanceof FormData)) {
       headers['Content-Type'] = 'application/json'
       options.body = JSON.stringify(options.body)
