@@ -29,11 +29,15 @@ class handler(BaseHTTPRequestHandler):
                 self.send_error(400, "Missing email or password")
                 return
             
-            # Simple mock authentication - for demo, accept any email/password combo
+            # For demo purposes, accept specific test credentials OR any email with password "demo123"
             # In production this would check against a real database
-            if email and password:
-                # Generate consistent user ID from email
-                import hashlib
+            import hashlib
+            
+            # Allow test credentials or password "demo123" for any email  
+            if (email and password and 
+                (password == "demo123" or 
+                 (email in users_db and users_db[email].get("password") == password))):
+                
                 user_id = hashlib.md5(email.encode()).hexdigest()[:8]
                 token = f"mock_token_{user_id}"
                 
@@ -53,7 +57,7 @@ class handler(BaseHTTPRequestHandler):
                 return
             
             # Invalid credentials
-            self.send_error(401, "Missing email or password")
+            self.send_error(401, "Invalid credentials")
             
         except Exception as e:
             self.send_error(500, f"Internal server error: {str(e)}")
