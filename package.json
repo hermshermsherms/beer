@@ -1,8 +1,0 @@
-{
-  "name": "beer-app",
-  "version": "1.0.0",
-  "scripts": {
-    "build": "echo 'Static files already in place, no build needed'",
-    "dev": "echo 'Development mode - static files served'"
-  }
-}
