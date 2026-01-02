@@ -80,7 +80,7 @@ async def register(user: UserCreate):
                 # Insert user profile
                 supabase.table("users").insert({
                     "id": response.user.id,
-                    "email": user.email,
+                    "username": user.email,  # Use email as username
                     "name": user.name
                 }).execute()
                 
@@ -97,6 +97,7 @@ async def register(user: UserCreate):
     user_id = f"user_{len(users_db) + 1}"
     users_db[user_id] = {
         "id": user_id,
+        "username": user.email,  # Use email as username  
         "email": user.email,
         "name": user.name,
         "password": user.password
@@ -134,7 +135,7 @@ async def login(user: UserLogin):
     
     # Mock authentication fallback
     for uid, u in users_db.items():
-        if u["email"] == user.email and u["password"] == user.password:
+        if u.get("email") == user.email and u["password"] == user.password:
             token = f"mock_token_{uid}"
             sessions[token] = uid
             current_user_id = uid
