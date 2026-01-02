@@ -1,7 +1,7 @@
 -- Users table (extends Supabase auth)
 CREATE TABLE users (
   id UUID REFERENCES auth.users(id) PRIMARY KEY,
-  username TEXT UNIQUE NOT NULL,
+  email TEXT UNIQUE NOT NULL,
   name TEXT NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
