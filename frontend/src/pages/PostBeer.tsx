@@ -1,8 +1,12 @@
 import { useState } from 'react'
+import { useAuth } from '../components/AuthContext'
+import { uploadBeerImage, createBeerPost } from '../lib/supabase'
 
 function PostBeer() {
+  const { userId } = useAuth()
   const [image, setImage] = useState<File | null>(null)
   const [note, setNote] = useState('')
+  const [uploading, setUploading] = useState(false)
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -10,7 +14,7 @@ function PostBeer() {
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
     if (!image) {
@@ -23,14 +27,33 @@ function PostBeer() {
       return
     }
 
-    // TODO: Implement beer posting with Supabase
-    console.log('Post beer:', { image, note })
+    if (!userId) {
+      alert('You must be logged in to post')
+      return
+    }
+
+    setUploading(true)
     
-    // Reset form
-    setImage(null)
-    setNote('')
-    const fileInput = document.getElementById('image') as HTMLInputElement
-    if (fileInput) fileInput.value = ''
+    try {
+      // Upload image to Supabase Storage
+      const imageUrl = await uploadBeerImage(image, userId)
+      
+      // Create beer post in database
+      await createBeerPost(imageUrl, note, userId)
+      
+      alert('Beer posted successfully!')
+      
+      // Reset form
+      setImage(null)
+      setNote('')
+      const fileInput = document.getElementById('image') as HTMLInputElement
+      if (fileInput) fileInput.value = ''
+    } catch (error) {
+      console.error('Error posting beer:', error)
+      alert('Failed to post beer. Please try again.')
+    } finally {
+      setUploading(false)
+    }
   }
 
   return (
@@ -61,7 +84,9 @@ function PostBeer() {
           />
         </div>
 
-        <button type="submit">Post Beer</button>
+        <button type="submit" disabled={uploading}>
+          {uploading ? 'Posting...' : 'Post Beer'}
+        </button>
       </form>
     </div>
   )
