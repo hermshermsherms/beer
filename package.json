@@ -2,7 +2,7 @@
   "name": "beer-app",
   "version": "1.0.0",
   "scripts": {
-    "build": "cd frontend && npm ci && npm run build && cp -r dist/* ../public/",
+    "build": "cd frontend && npm install && npm run build && cp -r dist/* ../public/",
     "dev": "cd frontend && npm run dev"
   }
 }
