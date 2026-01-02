@@ -20,7 +20,15 @@ class handler(BaseHTTPRequestHandler):
             password = data.get('password')
             
             if not all([email, password]):
-                self.send_error(400, "Missing email or password")
+                result = {"error": "Email and password are required"}
+                
+                self.send_response(400)
+                self.send_header('Content-type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
+                self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+                self.end_headers()
+                self.wfile.write(json.dumps(result).encode())
                 return
             
             # Check credentials against Supabase users table
@@ -59,12 +67,28 @@ class handler(BaseHTTPRequestHandler):
                     return
                 else:
                     # No user found - invalid credentials
-                    self.send_error(401, "Invalid credentials")
+                    result = {"error": "Wrong email or password"}
+                    
+                    self.send_response(401)
+                    self.send_header('Content-type', 'application/json')
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
+                    self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+                    self.end_headers()
+                    self.wfile.write(json.dumps(result).encode())
                     return
                     
             except Exception as e:
                 print(f"Login error: {e}")
-                self.send_error(401, "Invalid credentials")
+                result = {"error": "Wrong email or password"}
+                
+                self.send_response(401)
+                self.send_header('Content-type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
+                self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+                self.end_headers()
+                self.wfile.write(json.dumps(result).encode())
             
         except Exception as e:
             self.send_error(500, f"Internal server error: {str(e)}")
