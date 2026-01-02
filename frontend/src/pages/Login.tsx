@@ -13,9 +13,9 @@ function Login() {
       const response = await api.login({ username, password })
       console.log('Login successful:', response)
       navigate('/')
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login failed:', error)
-      alert('Login failed: ' + error.message)
+      alert('Login failed: ' + (error?.message || 'Unknown error'))
     }
   }
 

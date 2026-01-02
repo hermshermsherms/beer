@@ -21,9 +21,9 @@ function Register() {
       const response = await api.register({ username, password, name })
       console.log('Registration successful:', response)
       navigate('/')
-    } catch (error) {
+    } catch (error: any) {
       console.error('Registration failed:', error)
-      alert('Registration failed: ' + error.message)
+      alert('Registration failed: ' + (error?.message || 'Unknown error'))
     }
   }
 
