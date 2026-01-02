@@ -1,16 +1,22 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { api } from '../services/api'
 
 function Login() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const navigate = useNavigate()
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // TODO: Implement authentication with Supabase
-    console.log('Login:', { username, password })
-    navigate('/')
+    try {
+      const response = await api.login({ username, password })
+      console.log('Login successful:', response)
+      navigate('/')
+    } catch (error) {
+      console.error('Login failed:', error)
+      alert('Login failed: ' + error.message)
+    }
   }
 
   return (

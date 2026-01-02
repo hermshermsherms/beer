@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { api } from '../services/api'
 
 function Register() {
   const [username, setUsername] = useState('')
@@ -8,7 +9,7 @@ function Register() {
   const [name, setName] = useState('')
   const navigate = useNavigate()
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
     if (password !== confirmPassword) {
@@ -16,9 +17,14 @@ function Register() {
       return
     }
 
-    // TODO: Implement registration with Supabase
-    console.log('Register:', { username, password, name })
-    navigate('/')
+    try {
+      const response = await api.register({ username, password, name })
+      console.log('Registration successful:', response)
+      navigate('/')
+    } catch (error) {
+      console.error('Registration failed:', error)
+      alert('Registration failed: ' + error.message)
+    }
   }
 
   return (
