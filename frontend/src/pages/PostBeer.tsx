@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from '../components/AuthContext'
-import { uploadBeerImage, createBeerPost } from '../lib/supabase'
+import { API_BASE } from '../config'
 
 function PostBeer() {
   const { userId } = useAuth()
@@ -35,12 +35,26 @@ function PostBeer() {
     setUploading(true)
     
     try {
-      // Upload image to Supabase Storage
-      const imageUrl = await uploadBeerImage(image, userId)
+      // Post beer to our API endpoint
+      const token = localStorage.getItem('auth_token')
       
-      // Create beer post in database
-      await createBeerPost(imageUrl, note, userId)
+      const response = await fetch(`${API_BASE}/beers`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          note: note
+        })
+      })
       
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to post beer')
+      }
+      
+      const result = await response.json()
       alert('Beer posted successfully!')
       
       // Reset form
@@ -48,9 +62,9 @@ function PostBeer() {
       setNote('')
       const fileInput = document.getElementById('image') as HTMLInputElement
       if (fileInput) fileInput.value = ''
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error posting beer:', error)
-      alert('Failed to post beer. Please try again.')
+      alert('Failed to post beer: ' + (error.message || 'Please try again.'))
     } finally {
       setUploading(false)
     }

@@ -15,14 +15,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
   const [userId, setUserId] = useState<string | null>(null)
 
-  const decodeToken = (token: string) => {
+  const extractUserIdFromToken = (token: string) => {
     try {
-      const base64Url = token.split('.')[1]
-      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
-      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
-      }).join(''))
-      return JSON.parse(jsonPayload)
+      // Our token format is "token_<user_id>"
+      if (token.startsWith('token_')) {
+        return token.substring(6) // Remove "token_" prefix
+      }
+      return null
     } catch (error) {
       return null
     }
@@ -31,10 +30,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const token = localStorage.getItem('auth_token')
     if (token) {
-      const decoded = decodeToken(token)
-      if (decoded && decoded.sub) {
+      const extractedUserId = extractUserIdFromToken(token)
+      if (extractedUserId) {
         setIsAuthenticated(true)
-        setUserId(decoded.sub)
+        setUserId(extractedUserId)
       } else {
         localStorage.removeItem('auth_token')
         setIsAuthenticated(false)
@@ -49,9 +48,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = (token: string) => {
     localStorage.setItem('auth_token', token)
-    const decoded = decodeToken(token)
+    const extractedUserId = extractUserIdFromToken(token)
     setIsAuthenticated(true)
-    setUserId(decoded?.sub || null)
+    setUserId(extractedUserId)
   }
 
   const logout = () => {
