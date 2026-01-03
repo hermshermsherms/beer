@@ -35,18 +35,21 @@ function PostBeer() {
     setUploading(true)
     
     try {
+      // Create FormData for multipart/form-data upload
+      const formData = new FormData()
+      formData.append('image', image)
+      formData.append('note', note)
+      
       // Post beer to our API endpoint
       const token = localStorage.getItem('auth_token')
       
       const response = await fetch(`${API_BASE}/beers`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
+          // Don't set Content-Type - let browser set it with boundary
         },
-        body: JSON.stringify({
-          note: note
-        })
+        body: formData
       })
       
       if (!response.ok) {
