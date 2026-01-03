@@ -68,8 +68,14 @@ function Leaderboard() {
     
     return {
       labels: months.map(month => {
-        const date = new Date(month + '-01')
-        return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' })
+        // Handle week format (YYYY-WXX) vs month format (YYYY-MM)
+        if (month.includes('-W')) {
+          const [year, week] = month.split('-W')
+          return `${year} Week ${week}`
+        } else {
+          const date = new Date(month + '-01')
+          return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' })
+        }
       }),
       datasets: userData.map((user, index) => ({
         label: user.user_name,
@@ -79,7 +85,9 @@ function Leaderboard() {
         }),
         borderColor: colors[index % colors.length],
         backgroundColor: colors[index % colors.length] + '20',
-        tension: 0.4
+        tension: 0.4,
+        pointRadius: 4,
+        pointHoverRadius: 6
       }))
     }
   }
@@ -92,7 +100,37 @@ function Leaderboard() {
       },
       title: {
         display: true,
-        text: 'Cumulative Beers Over Time'
+        text: 'Cumulative Beers Over Time (By Week)'
+      },
+      tooltip: {
+        mode: 'index' as const,
+        intersect: false,
+      },
+      annotation: {
+        annotations: userData.reduce((acc, user, index) => {
+          if (user.monthly_data.length > 0) {
+            const lastDataPoint = user.monthly_data[user.monthly_data.length - 1]
+            const colors = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe']
+            acc[`label${index}`] = {
+              type: 'label',
+              xValue: getMonths().length - 1,
+              yValue: lastDataPoint.total_drinks,
+              backgroundColor: 'rgba(255, 255, 255, 0.8)',
+              borderColor: colors[index % colors.length],
+              borderWidth: 1,
+              borderRadius: 4,
+              content: user.user_name,
+              font: {
+                size: 11,
+                weight: 'bold'
+              },
+              textAlign: 'center',
+              xAdjust: 20,
+              yAdjust: index * 15 - (userData.length * 7.5) // Spread labels vertically
+            }
+          }
+          return acc
+        }, {} as any)
       }
     },
     scales: {
@@ -106,9 +144,17 @@ function Leaderboard() {
       x: {
         title: {
           display: true,
-          text: 'Time (Months)'
+          text: 'Time (Weeks)'
         }
       }
+    },
+    interaction: {
+      mode: 'index' as const,
+      intersect: false,
+    },
+    hover: {
+      mode: 'index' as const,
+      intersect: false,
     }
   }
 

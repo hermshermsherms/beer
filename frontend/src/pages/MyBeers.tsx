@@ -110,7 +110,7 @@ function MyBeers() {
           <p>No beers posted yet. <a href="/">Post your first beer!</a></p>
         </div>
       ) : (
-        <div style={{ background: 'white', borderRadius: '8px', overflow: 'hidden' }}>
+        <div className="table-wrapper">
           <table className="table">
             <thead>
               <tr>

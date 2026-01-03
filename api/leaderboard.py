@@ -88,41 +88,61 @@ class handler(BaseHTTPRequestHandler):
                 with urllib.request.urlopen(req) as response:
                     beers_data = json.loads(response.read().decode('utf-8'))
                 
-                # Process the data to create monthly counts
+                # Process the data to create weekly counts
                 from collections import defaultdict
-                from datetime import datetime
+                from datetime import datetime, timedelta
                 
-                user_monthly_counts = defaultdict(lambda: defaultdict(int))
+                user_weekly_counts = defaultdict(lambda: defaultdict(int))
                 
                 for beer in beers_data:
-                    if beer.get('users') and beer['users'].get('name'):
-                        user_name = beer['users']['name']
-                        created_at = beer['created_at']
-                        
-                        # Extract year-month from created_at
-                        date = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
-                        month_key = date.strftime('%Y-%m')
-                        
-                        user_monthly_counts[user_name][month_key] += 1
+                    user_id = beer.get('user_id', 'unknown')
+                    created_at = beer['created_at']
+                    
+                    # Extract week from created_at (Monday as start of week)
+                    date = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+                    
+                    # Get the Monday of the week this date falls in
+                    days_since_monday = date.weekday()
+                    week_start = date - timedelta(days=days_since_monday)
+                    week_key = week_start.strftime('%Y-W%U')  # Year-Week format
+                    
+                    user_weekly_counts[user_id][week_key] += 1
                 
-                # Convert to frontend format
+                # Get all users from the first query to map user_id to names
+                users_req = urllib.request.Request(
+                    f"{SUPABASE_URL}/rest/v1/users?select=id,name",
+                    headers={
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': f'Bearer {SUPABASE_ANON_KEY}',
+                        'Content-Type': 'application/json'
+                    }
+                )
+                
+                with urllib.request.urlopen(users_req) as response:
+                    users_data = json.loads(response.read().decode('utf-8'))
+                
+                users_map = {user["id"]: user["name"] for user in users_data}
+                
+                # Convert to frontend format with proper user names
                 formatted_data = []
-                for user_name, monthly_counts in user_monthly_counts.items():
-                    monthly_data = []
+                for user_id, weekly_counts in user_weekly_counts.items():
+                    user_name = users_map.get(user_id, f"User {user_id}")
+                    weekly_data = []
                     cumulative_total = 0
                     
-                    # Sort months and create cumulative data
-                    for month in sorted(monthly_counts.keys()):
-                        cumulative_total += monthly_counts[month]
-                        monthly_data.append({
-                            "month": month,
+                    # Sort weeks and create cumulative data
+                    for week in sorted(weekly_counts.keys()):
+                        cumulative_total += weekly_counts[week]
+                        weekly_data.append({
+                            "month": week,  # Keep field name as "month" for frontend compatibility
                             "total_drinks": cumulative_total
                         })
                     
-                    formatted_data.append({
-                        "user_name": user_name,
-                        "monthly_data": monthly_data
-                    })
+                    if weekly_data:  # Only add users who have data
+                        formatted_data.append({
+                            "user_name": user_name,
+                            "monthly_data": weekly_data  # Keep field name for frontend compatibility
+                        })
                 
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')

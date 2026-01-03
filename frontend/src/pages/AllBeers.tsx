@@ -65,7 +65,7 @@ function AllBeers() {
           <p>No beers have been posted yet.</p>
         </div>
       ) : (
-        <div style={{ background: 'white', borderRadius: '8px', overflow: 'hidden' }}>
+        <div className="table-wrapper">
           <table className="table">
             <thead>
               <tr>

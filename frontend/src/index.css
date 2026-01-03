@@ -127,3 +127,138 @@ button:hover {
   object-fit: cover;
   border-radius: 4px;
 }
+
+/* Mobile responsive design */
+@media (max-width: 768px) {
+  .container {
+    padding: 0 10px;
+  }
+
+  /* Navigation responsive design */
+  .nav {
+    padding: 0.75rem 0;
+  }
+
+  .nav-container {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+
+  .nav-links {
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+  }
+
+  .nav-links a {
+    padding: 0.5rem 1rem;
+    background: #f8f9fa;
+    border-radius: 4px;
+    text-align: center;
+    flex: 1;
+    min-width: 80px;
+  }
+
+  /* Logout button responsive */
+  .nav-container > button {
+    width: auto;
+    margin-top: 0.5rem;
+    align-self: center;
+    padding: 0.5rem 2rem;
+  }
+
+  /* Table responsive design */
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table {
+    min-width: 600px;
+  }
+
+  .table th,
+  .table td {
+    padding: 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  .beer-image {
+    width: 60px;
+    height: 60px;
+  }
+
+  /* Form responsive design */
+  .auth-form {
+    padding: 1.5rem;
+    margin: 1rem;
+  }
+
+  .form-group {
+    margin-bottom: 0.75rem;
+  }
+
+  /* Page content responsive */
+  h1 {
+    font-size: 1.75rem;
+    margin-bottom: 1rem !important;
+    text-align: center;
+  }
+
+  /* Chart container responsive */
+  .chart-container {
+    padding: 1rem !important;
+  }
+
+  /* Button responsive */
+  button {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  /* Text area responsive */
+  textarea {
+    min-height: 100px;
+  }
+}
+
+@media (max-width: 480px) {
+  .nav-links {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .nav-links a {
+    flex: none;
+  }
+
+  .table th,
+  .table td {
+    padding: 0.25rem;
+    font-size: 0.8rem;
+  }
+
+  .beer-image {
+    width: 50px;
+    height: 50px;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  .auth-form {
+    margin: 0.5rem;
+    padding: 1rem;
+  }
+}
+
+/* Table wrapper for horizontal scroll */
+.table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 8px;
+  background: white;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}

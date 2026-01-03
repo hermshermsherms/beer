@@ -81,14 +81,48 @@ class handler(BaseHTTPRequestHandler):
                 headers={
                     'apikey': SUPABASE_ANON_KEY,
                     'Authorization': f'Bearer {SUPABASE_ANON_KEY}',
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Prefer': 'return=minimal'
                 },
                 method='DELETE'
             )
             
+            print(f"Attempting to delete beer {beer_id} for user {user_id}")
+            print(f"Delete URL: {SUPABASE_URL}/rest/v1/beers?id=eq.{beer_id}&user_id=eq.{user_id}")
+            
             with urllib.request.urlopen(delete_req) as response:
-                # Supabase returns 204 No Content for successful deletes
-                pass
+                response_code = response.getcode()
+                print(f"Delete response code: {response_code}")
+                
+                if response_code == 204:
+                    print("Delete successful - beer removed")
+                else:
+                    print(f"Unexpected response code: {response_code}")
+            
+            # Verify the beer was actually deleted
+            verify_deleted_req = urllib.request.Request(
+                f"{SUPABASE_URL}/rest/v1/beers?id=eq.{beer_id}",
+                headers={
+                    'apikey': SUPABASE_ANON_KEY,
+                    'Authorization': f'Bearer {SUPABASE_ANON_KEY}',
+                    'Content-Type': 'application/json'
+                }
+            )
+            
+            with urllib.request.urlopen(verify_deleted_req) as response:
+                remaining_beers = json.loads(response.read().decode('utf-8'))
+                print(f"Verification check - remaining beers with ID {beer_id}: {len(remaining_beers)}")
+                
+                if len(remaining_beers) > 0:
+                    print(f"WARNING: Beer {beer_id} still exists after delete operation!")
+                    self.send_response(500)
+                    self.send_header('Content-type', 'application/json')
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.send_header('Access-Control-Allow-Methods', 'DELETE, OPTIONS')
+                    self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({"error": "Beer deletion failed - item still exists"}).encode())
+                    return
             
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
