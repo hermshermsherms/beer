@@ -62,16 +62,27 @@ function Leaderboard() {
     return Array.from(months).sort()
   }
 
+  const getLeaderboardSummary = () => {
+    return userData
+      .map(user => ({
+        user_name: user.user_name,
+        total_beers: user.monthly_data.length > 0 
+          ? user.monthly_data[user.monthly_data.length - 1].total_drinks 
+          : 0
+      }))
+      .sort((a, b) => b.total_beers - a.total_beers)
+  }
+
   const getChartData = () => {
     const months = getMonths()
     const colors = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe']
     
     return {
-      labels: months.map(month => {
+      labels: months.map((month, index) => {
         // Handle week format (YYYY-WXX) vs month format (YYYY-MM)
         if (month.includes('-W')) {
-          const [year, week] = month.split('-W')
-          return `${year} Week ${week}`
+          // Convert to simple Week 1, Week 2, etc. format
+          return `Week ${index + 1}`
         } else {
           const date = new Date(month + '-01')
           return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' })
@@ -139,12 +150,15 @@ function Leaderboard() {
         title: {
           display: true,
           text: 'Total Drinks'
+        },
+        ticks: {
+          stepSize: 1
         }
       },
       x: {
         title: {
           display: true,
-          text: 'Time (Weeks)'
+          text: 'Time (Weeks in 2026)'
         }
       }
     },
@@ -183,9 +197,40 @@ function Leaderboard() {
           <p>No data available yet.</p>
         </div>
       ) : (
-        <div style={{ background: 'white', padding: '2rem', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
-          <Line data={getChartData()} options={options} />
-        </div>
+        <>
+          {/* Summary Table */}
+          <div className="table-wrapper" style={{ marginBottom: '2rem' }}>
+            <table className="table">
+              <thead>
+                <tr>
+                  <th style={{ textAlign: 'center' }}>Rank</th>
+                  <th>Name</th>
+                  <th style={{ textAlign: 'center' }}>Total Beers</th>
+                </tr>
+              </thead>
+              <tbody>
+                {getLeaderboardSummary().map((user, index) => (
+                  <tr key={user.user_name}>
+                    <td style={{ textAlign: 'center', fontWeight: 'bold', fontSize: '1.2rem' }}>
+                      {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index + 1}
+                    </td>
+                    <td style={{ fontWeight: index < 3 ? 'bold' : 'normal' }}>
+                      {user.user_name}
+                    </td>
+                    <td style={{ textAlign: 'center', fontWeight: 'bold', color: '#667eea' }}>
+                      {user.total_beers}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Chart */}
+          <div style={{ background: 'white', padding: '2rem', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
+            <Line data={getChartData()} options={options} />
+          </div>
+        </>
       )}
     </div>
   )

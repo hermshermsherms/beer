@@ -14,7 +14,7 @@ function Layout() {
       <nav className="nav">
         <div className="container nav-container">
           <Link to="/" style={{ fontSize: '1.5rem', fontWeight: 'bold', textDecoration: 'none', color: '#667eea' }}>
-            🍺 Beer App
+            🍺 MegaBeer
           </Link>
           <ul className="nav-links">
             <li><Link to="/">Post Beer</Link></li>
@@ -39,7 +39,7 @@ function Layout() {
           </ul>
         </div>
       </nav>
-      <main className="container" style={{ padding: '2rem 20px' }}>
+      <main className="container main-content" style={{ padding: '2rem 20px', borderRadius: '20px 20px 0 0', marginTop: '1rem' }}>
         <Outlet />
       </main>
     </>
