@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { API_BASE } from '../config'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -28,28 +29,29 @@ interface UserData {
 
 function Leaderboard() {
   const [userData, setUserData] = useState<UserData[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // TODO: Fetch leaderboard data from Supabase
-    // Mock data for now
-    setUserData([
-      {
-        user_name: 'John Doe',
-        monthly_data: [
-          { month: '2023-10', total_drinks: 5 },
-          { month: '2023-11', total_drinks: 12 },
-          { month: '2023-12', total_drinks: 18 }
-        ]
-      },
-      {
-        user_name: 'Jane Smith',
-        monthly_data: [
-          { month: '2023-10', total_drinks: 3 },
-          { month: '2023-11', total_drinks: 8 },
-          { month: '2023-12', total_drinks: 15 }
-        ]
+    const fetchLeaderboardData = async () => {
+      try {
+        const response = await fetch(`${API_BASE}/leaderboard`)
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch leaderboard data')
+        }
+
+        const leaderboardData = await response.json()
+        setUserData(leaderboardData)
+      } catch (error) {
+        console.error('Error fetching leaderboard data:', error)
+        setError('Failed to load leaderboard data')
+      } finally {
+        setLoading(false)
       }
-    ])
+    }
+
+    fetchLeaderboardData()
   }, [])
 
   const getMonths = () => {
@@ -108,6 +110,22 @@ function Leaderboard() {
         }
       }
     }
+  }
+
+  if (loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '2rem' }}>
+        <p>Loading leaderboard data...</p>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div style={{ textAlign: 'center', padding: '2rem', background: 'white', borderRadius: '8px' }}>
+        <p style={{ color: 'red' }}>{error}</p>
+      </div>
+    )
   }
 
   return (

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { API_BASE } from '../config'
 
 interface Beer {
   id: string
@@ -10,30 +11,49 @@ interface Beer {
 
 function AllBeers() {
   const [beers, setBeers] = useState<Beer[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // TODO: Fetch all beers from Supabase
-    // Mock data for now
-    setBeers([
-      {
-        id: '1',
-        image_url: 'https://via.placeholder.com/80x80?text=🍺',
-        note: 'Amazing craft beer from local brewery',
-        created_at: '2023-12-31T12:00:00Z',
-        user_name: 'John Doe'
-      },
-      {
-        id: '2',
-        image_url: 'https://via.placeholder.com/80x80?text=🍻',
-        note: 'Perfect beer for a hot summer day',
-        created_at: '2023-12-30T18:30:00Z',
-        user_name: 'Jane Smith'
+    const fetchAllBeers = async () => {
+      try {
+        const response = await fetch(`${API_BASE}/all-beers`)
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch beers')
+        }
+
+        const beersData = await response.json()
+        setBeers(beersData)
+      } catch (error) {
+        console.error('Error fetching beers:', error)
+        setError('Failed to load beers')
+      } finally {
+        setLoading(false)
       }
-    ])
+    }
+
+    fetchAllBeers()
   }, [])
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString() + ' ' + new Date(dateString).toLocaleTimeString()
+  }
+
+  if (loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '2rem' }}>
+        <p>Loading all beers...</p>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div style={{ textAlign: 'center', padding: '2rem', background: 'white', borderRadius: '8px' }}>
+        <p style={{ color: 'red' }}>{error}</p>
+      </div>
+    )
   }
 
   return (

@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import { useAuth } from '../components/AuthContext'
+import { API_BASE } from '../config'
 
 interface Beer {
   id: string
@@ -8,30 +10,95 @@ interface Beer {
 }
 
 function MyBeers() {
+  const { isAuthenticated } = useAuth()
   const [beers, setBeers] = useState<Beer[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // TODO: Fetch user's beers from Supabase
-    // Mock data for now
-    setBeers([
-      {
-        id: '1',
-        image_url: 'https://via.placeholder.com/80x80?text=🍺',
-        note: 'Great IPA with citrus notes',
-        created_at: '2023-12-31T12:00:00Z'
+    const fetchMyBeers = async () => {
+      if (!isAuthenticated) {
+        setLoading(false)
+        return
       }
-    ])
-  }, [])
 
-  const handleDelete = (id: string) => {
+      try {
+        const token = localStorage.getItem('auth_token')
+        const response = await fetch(`${API_BASE}/my-beers`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch beers')
+        }
+
+        const beersData = await response.json()
+        setBeers(beersData)
+      } catch (error) {
+        console.error('Error fetching beers:', error)
+        setError('Failed to load your beers')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchMyBeers()
+  }, [isAuthenticated])
+
+  const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this beer entry?')) {
-      // TODO: Delete from Supabase
-      setBeers(beers.filter(beer => beer.id !== id))
+      try {
+        const token = localStorage.getItem('auth_token')
+        const response = await fetch(`${API_BASE}/delete-beer`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ beer_id: id })
+        })
+
+        if (!response.ok) {
+          throw new Error('Failed to delete beer')
+        }
+
+        // Remove from local state
+        setBeers(beers.filter(beer => beer.id !== id))
+      } catch (error) {
+        console.error('Error deleting beer:', error)
+        alert('Failed to delete beer. Please try again.')
+      }
     }
   }
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString() + ' ' + new Date(dateString).toLocaleTimeString()
+  }
+
+  if (loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '2rem' }}>
+        <p>Loading your beers...</p>
+      </div>
+    )
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div style={{ textAlign: 'center', padding: '2rem', background: 'white', borderRadius: '8px' }}>
+        <p>Please log in to view your beers.</p>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div style={{ textAlign: 'center', padding: '2rem', background: 'white', borderRadius: '8px' }}>
+        <p style={{ color: 'red' }}>{error}</p>
+      </div>
+    )
   }
 
   return (
