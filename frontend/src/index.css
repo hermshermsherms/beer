@@ -236,12 +236,14 @@ button:hover {
 
 @media (max-width: 480px) {
   .nav-links {
-    flex-direction: column;
     gap: 0.5rem;
+    font-size: 0.85rem;
   }
 
   .nav-links a {
-    flex: none;
+    padding: 0.4rem 0.6rem;
+    flex: 1;
+    min-width: 60px;
   }
 
   .table th,
@@ -272,4 +274,22 @@ button:hover {
   border-radius: 8px;
   background: white;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Leaderboard table - no min-width to fit on mobile */
+.leaderboard-table {
+  width: 100%;
+}
+
+/* Compact leaderboard table on mobile */
+@media (max-width: 768px) {
+  .leaderboard-table th,
+  .leaderboard-table td {
+    padding: 0.5rem 0.25rem;
+    font-size: 0.85rem;
+  }
+
+  .leaderboard-table td:first-child {
+    font-size: 1rem;
+  }
 }

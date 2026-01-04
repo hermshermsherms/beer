@@ -158,7 +158,7 @@ function Leaderboard() {
       x: {
         title: {
           display: true,
-          text: 'Time (Weeks in 2026)'
+          text: 'Weeks'
         }
       }
     },
@@ -200,12 +200,12 @@ function Leaderboard() {
         <>
           {/* Summary Table */}
           <div className="table-wrapper" style={{ marginBottom: '2rem' }}>
-            <table className="table">
+            <table className="table leaderboard-table">
               <thead>
                 <tr>
-                  <th style={{ textAlign: 'center' }}>Rank</th>
-                  <th>Name</th>
-                  <th style={{ textAlign: 'center' }}>Total Beers</th>
+                  <th style={{ textAlign: 'center', width: '15%' }}>Rank</th>
+                  <th style={{ width: '60%' }}>Name</th>
+                  <th style={{ textAlign: 'center', width: '25%' }}>Count</th>
                 </tr>
               </thead>
               <tbody>

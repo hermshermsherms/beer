@@ -61,14 +61,16 @@ function MyBeers() {
         })
 
         if (!response.ok) {
-          throw new Error('Failed to delete beer')
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(errorData.error || 'Failed to delete beer')
         }
 
         // Remove from local state
         setBeers(beers.filter(beer => beer.id !== id))
-      } catch (error) {
+        alert('Beer deleted successfully!')
+      } catch (error: any) {
         console.error('Error deleting beer:', error)
-        alert('Failed to delete beer. Please try again.')
+        alert(error.message || 'Failed to delete beer. Please try again.')
       }
     }
   }
