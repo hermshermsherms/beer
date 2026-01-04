@@ -97,7 +97,7 @@ function PostBeer() {
             onChange={(e) => setNote(e.target.value)}
             maxLength={250}
             rows={4}
-            placeholder="Tell us about this beer..."
+            placeholder="Tasting Notes"
           />
         </div>
 
