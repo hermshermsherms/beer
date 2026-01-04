@@ -97,15 +97,14 @@ class handler(BaseHTTPRequestHandler):
                 for beer in beers_data:
                     user_id = beer.get('user_id', 'unknown')
                     created_at = beer['created_at']
-                    
-                    # Extract week from created_at (Monday as start of week)
+
+                    # Extract week from created_at using ISO week format (Monday as start of week)
                     date = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
-                    
-                    # Get the Monday of the week this date falls in
-                    days_since_monday = date.weekday()
-                    week_start = date - timedelta(days=days_since_monday)
-                    week_key = week_start.strftime('%Y-W%U')  # Year-Week format
-                    
+
+                    # Use ISO week format (year-week)
+                    iso_year, iso_week, _ = date.isocalendar()
+                    week_key = f"{iso_year}-W{iso_week:02d}"
+
                     user_weekly_counts[user_id][week_key] += 1
                 
                 # Get all users from the first query to map user_id to names

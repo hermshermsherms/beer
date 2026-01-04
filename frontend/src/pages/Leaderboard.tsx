@@ -203,21 +203,21 @@ function Leaderboard() {
             <table className="table leaderboard-table">
               <thead>
                 <tr>
-                  <th style={{ textAlign: 'center', width: '15%' }}>Rank</th>
-                  <th style={{ width: '60%' }}>Name</th>
-                  <th style={{ textAlign: 'center', width: '25%' }}>Count</th>
+                  <th style={{ textAlign: 'center', width: '20%', padding: '0.5rem 0.25rem' }}>#</th>
+                  <th style={{ width: '55%', padding: '0.5rem 0.25rem' }}>Name</th>
+                  <th style={{ textAlign: 'center', width: '25%', padding: '0.5rem 0.25rem' }}>Count</th>
                 </tr>
               </thead>
               <tbody>
                 {getLeaderboardSummary().map((user, index) => (
                   <tr key={user.user_name}>
-                    <td style={{ textAlign: 'center', fontWeight: 'bold', fontSize: '1.2rem' }}>
+                    <td style={{ textAlign: 'center', fontWeight: 'bold', fontSize: '1.1rem', padding: '0.5rem 0.25rem' }}>
                       {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index + 1}
                     </td>
-                    <td style={{ fontWeight: index < 3 ? 'bold' : 'normal' }}>
+                    <td style={{ fontWeight: index < 3 ? 'bold' : 'normal', padding: '0.5rem 0.25rem' }}>
                       {user.user_name}
                     </td>
-                    <td style={{ textAlign: 'center', fontWeight: 'bold', color: '#667eea' }}>
+                    <td style={{ textAlign: 'center', fontWeight: 'bold', color: '#667eea', padding: '0.5rem 0.25rem' }}>
                       {user.total_beers}
                     </td>
                   </tr>

@@ -279,17 +279,33 @@ button:hover {
 /* Leaderboard table - no min-width to fit on mobile */
 .leaderboard-table {
   width: 100%;
+  table-layout: fixed;
 }
 
 /* Compact leaderboard table on mobile */
 @media (max-width: 768px) {
   .leaderboard-table th,
   .leaderboard-table td {
-    padding: 0.5rem 0.25rem;
-    font-size: 0.85rem;
+    padding: 0.5rem 0.2rem !important;
+    font-size: 0.85rem !important;
   }
 
   .leaderboard-table td:first-child {
-    font-size: 1rem;
+    font-size: 1rem !important;
+  }
+
+  .leaderboard-table th:first-child,
+  .leaderboard-table td:first-child {
+    width: 20% !important;
+  }
+
+  .leaderboard-table th:nth-child(2),
+  .leaderboard-table td:nth-child(2) {
+    width: 55% !important;
+  }
+
+  .leaderboard-table th:nth-child(3),
+  .leaderboard-table td:nth-child(3) {
+    width: 25% !important;
   }
 }
