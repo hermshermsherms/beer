@@ -60,6 +60,11 @@ class handler(BaseHTTPRequestHandler):
             
             users_map = {user["id"]: user["name"] for user in users_data}
             
+            # Get all unique days across all users for complete date range
+            all_days = set()
+            for daily_counts in user_daily_counts.values():
+                all_days.update(daily_counts.keys())
+            
             # Convert to frontend format with proper user names
             formatted_data = []
             for user_id, daily_counts in user_daily_counts.items():
@@ -67,9 +72,10 @@ class handler(BaseHTTPRequestHandler):
                 daily_data = []
                 cumulative_total = 0
                 
-                # Sort days and create cumulative data
-                for day in sorted(daily_counts.keys()):
-                    cumulative_total += daily_counts[day]
+                # Sort all days and create cumulative data (include days with 0 beers)
+                for day in sorted(all_days):
+                    beers_today = daily_counts.get(day, 0)  # 0 if no beers this day
+                    cumulative_total += beers_today
                     daily_data.append({
                         "month": day,  # Keep field name as "month" for frontend compatibility
                         "total_drinks": cumulative_total
