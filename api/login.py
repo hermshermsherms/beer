@@ -5,8 +5,11 @@ import urllib.request
 import urllib.parse
 
 # Supabase configuration
-SUPABASE_URL = "https://rczatkqbmclnuwtanonj.supabase.co"
-SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjemF0a3FibWNsbnV3dGFub25qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcxOTU3ODksImV4cCI6MjA4Mjc3MTc4OX0.jkRHtatdUysh8DoLyjIX0tkEC69aEqPtEDGpJv_qOQE"
+SUPABASE_URL = os.environ.get('SUPABASE_URL')
+SUPABASE_ANON_KEY = os.environ.get('SUPABASE_ANON_KEY')
+
+if not SUPABASE_URL or not SUPABASE_ANON_KEY:
+    raise ValueError("SUPABASE_URL and SUPABASE_ANON_KEY must be set")
 
 class handler(BaseHTTPRequestHandler):
     def do_POST(self):
