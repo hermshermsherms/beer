@@ -80,7 +80,6 @@ function Leaderboard() {
     return {
       labels: days.map(day => {
         // Format YYYY-MM-DD to a more readable format
-        // Add time component to avoid timezone issues
         const date = new Date(day + 'T12:00:00')
         return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
       }),
