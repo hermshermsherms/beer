@@ -36,12 +36,19 @@ class handler(BaseHTTPRequestHandler):
                 
             user_id = token[6:]  # Remove 'token_' prefix
             
-            # Parse the request body to get beer ID
-            content_length = int(self.headers['Content-Length'])
-            post_data = self.rfile.read(content_length)
-            data = json.loads(post_data.decode('utf-8'))
+            # Get beer ID from URL path
+            path_parts = self.path.split('/')
+            beer_id = None
             
-            beer_id = data.get('beer_id')
+            # Find beer ID in path - could be /api/beers/{id} or /beers/{id}
+            for i, part in enumerate(path_parts):
+                if part == 'beers' and i + 1 < len(path_parts):
+                    beer_id = path_parts[i + 1]
+                    # Remove query parameters if present
+                    if '?' in beer_id:
+                        beer_id = beer_id.split('?')[0]
+                    break
+            
             if not beer_id:
                 self.send_response(400)
                 self.send_header('Content-type', 'application/json')
@@ -89,22 +96,15 @@ class handler(BaseHTTPRequestHandler):
             
             print(f"Attempting to delete beer {beer_id} for user {user_id}")
             print(f"Delete URL: {SUPABASE_URL}/rest/v1/beers?id=eq.{beer_id}")
+            
             with urllib.request.urlopen(delete_req) as response:
                 response_code = response.getcode()
                 print(f"Delete response code: {response_code}")
-
-                if response_code == 204 or response_code == 200:
+                
+                if response_code == 204:
                     print("Delete successful - beer removed")
                 else:
                     print(f"Unexpected response code: {response_code}")
-                    self.send_response(500)
-                    self.send_header('Content-type', 'application/json')
-                    self.send_header('Access-Control-Allow-Origin', '*')
-                    self.send_header('Access-Control-Allow-Methods', 'DELETE, OPTIONS')
-                    self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-                    self.end_headers()
-                    self.wfile.write(json.dumps({"error": f"Delete failed with status {response_code}"}).encode())
-                    return
             
             # Verify the beer was actually deleted
             verify_deleted_req = urllib.request.Request(

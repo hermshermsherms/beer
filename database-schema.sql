@@ -21,7 +21,7 @@ CREATE POLICY "Users can update own profile" ON users
 -- Beers table
 CREATE TABLE beers (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID REFERENCES auth.users(id) NOT NULL,
+  user_id UUID REFERENCES users(id) NOT NULL,
   image_url TEXT NOT NULL,
   note TEXT NOT NULL CHECK (length(note) <= 250),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -30,13 +30,13 @@ CREATE TABLE beers (
 -- Enable RLS
 ALTER TABLE beers ENABLE ROW LEVEL SECURITY;
 
--- Everyone can view all beers
+-- Allow anonymous users to view all beers
 CREATE POLICY "Anyone can view beers" ON beers
-  FOR SELECT TO authenticated USING (true);
+  FOR SELECT TO anon USING (true);
 
--- Users can only insert their own beers
-CREATE POLICY "Users can insert own beers" ON beers
-  FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
+-- Allow anonymous users to insert beers (API handles auth)
+CREATE POLICY "Allow beer inserts" ON beers
+  FOR INSERT TO anon WITH CHECK (true);
 
 -- Users can only delete their own beers
 CREATE POLICY "Users can delete own beers" ON beers

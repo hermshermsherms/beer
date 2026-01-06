@@ -30,3 +30,4 @@ logs/
 
 # Test files
 test.html
+.vercel

@@ -5,6 +5,10 @@ from typing import List
 import os
 from datetime import datetime
 import json
+import urllib.request
+import urllib.parse
+import uuid
+import base64
 
 app = FastAPI(title="Beer App API")
 
@@ -16,10 +20,66 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Supabase configuration
+SUPABASE_URL = "https://rczatkqbmclnuwtanonj.supabase.co"
+SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjemF0a3FibWNsbnV3dGFub25qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcxOTU3ODksImV4cCI6MjA4Mjc3MTc4OX0.jkRHtatdUysh8DoLyjIX0tkEC69aEqPtEDGpJv_qOQE"
+
 # Mock data storage (in production, this would be your database)
 users_db = {}
 beers_db = []
 current_user_id = None
+
+def upload_image_to_supabase(image_content, filename, user_id):
+    """Upload image to Supabase Storage and return public URL"""
+    try:
+        # Generate unique filename with proper extension
+        file_ext = filename.split('.')[-1] if '.' in filename else 'jpg'
+        unique_filename = f"{user_id}/{uuid.uuid4()}.{file_ext}"
+        
+        # Determine content type based on file extension
+        content_type = 'image/jpeg'  # Default
+        if file_ext.lower() in ['png']:
+            content_type = 'image/png'
+        elif file_ext.lower() in ['gif']:
+            content_type = 'image/gif'
+        elif file_ext.lower() in ['webp']:
+            content_type = 'image/webp'
+        
+        print(f"Attempting to upload image: {unique_filename}, size: {len(image_content)} bytes, type: {content_type}")
+        
+        # Upload to Supabase Storage
+        upload_req = urllib.request.Request(
+            f"{SUPABASE_URL}/storage/v1/object/beer-images/{unique_filename}",
+            data=image_content,
+            headers={
+                'Authorization': f'Bearer {SUPABASE_ANON_KEY}',
+                'Content-Type': content_type,
+                'apikey': SUPABASE_ANON_KEY
+            },
+            method='POST'
+        )
+        
+        with urllib.request.urlopen(upload_req) as upload_response:
+            upload_result = json.loads(upload_response.read().decode('utf-8'))
+            print(f"Upload successful: {upload_result}")
+        
+        # Get public URL
+        public_url = f"{SUPABASE_URL}/storage/v1/object/public/beer-images/{unique_filename}"
+        
+        return public_url
+        
+    except urllib.error.HTTPError as e:
+        error_body = e.read().decode('utf-8') if e.fp else str(e)
+        print(f"HTTP Error uploading image: {e.code} - {e.reason}")
+        print(f"Error response body: {error_body}")
+        print(f"Upload URL: {SUPABASE_URL}/storage/v1/object/beer-images/{unique_filename}")
+        # Return placeholder if upload fails
+        return "https://via.placeholder.com/300x300/4A90E2/FFFFFF?text=🍺"
+    except Exception as e:
+        print(f"General error uploading image: {e}")
+        print(f"Error type: {type(e)}")
+        # Return placeholder if upload fails
+        return "https://via.placeholder.com/300x300/4A90E2/FFFFFF?text=🍺"
 
 class UserCreate(BaseModel):
     username: str
@@ -60,20 +120,31 @@ async def post_beer(
     if not current_user_id:
         raise HTTPException(status_code=401, detail="Not authenticated")
     
-    # Save image (in production, upload to cloud storage)
-    image_filename = f"beer_{len(beers_db)}_{image.filename}"
+    if not note or len(note.strip()) == 0:
+        raise HTTPException(status_code=400, detail="Note is required")
+    
+    if len(note) > 250:
+        raise HTTPException(status_code=400, detail="Note must be 250 characters or less")
+    
+    # Read and upload image to Supabase Storage
+    try:
+        image_content = await image.read()
+        image_url = upload_image_to_supabase(image_content, image.filename or "image.jpg", current_user_id)
+    except Exception as e:
+        print(f"Error processing image: {e}")
+        raise HTTPException(status_code=500, detail="Failed to process image")
     
     beer = {
         "id": f"beer_{len(beers_db) + 1}",
         "user_id": current_user_id,
-        "image_url": f"https://via.placeholder.com/80x80?text=🍺",  # Mock image URL
-        "note": note,
+        "image_url": image_url,
+        "note": note.strip(),
         "created_at": datetime.now().isoformat(),
         "user_name": users_db[current_user_id]["name"]
     }
     beers_db.append(beer)
     
-    return {"message": "Beer posted successfully", "beer_id": beer["id"]}
+    return {"message": "Beer posted successfully", "beer_id": beer["id"], "image_url": image_url}
 
 @app.get("/api/beers/my")
 async def get_my_beers():

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../components/AuthContext'
-import { API_BASE } from '../config'
+import { api } from '../services/api'
 
 interface Beer {
   id: string
@@ -23,18 +23,7 @@ function MyBeers() {
       }
 
       try {
-        const token = localStorage.getItem('auth_token')
-        const response = await fetch(`${API_BASE}/my-beers`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        })
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch beers')
-        }
-
-        const beersData = await response.json()
+        const beersData = await api.getMyBeers()
         setBeers(beersData)
       } catch (error) {
         console.error('Error fetching beers:', error)
@@ -50,21 +39,7 @@ function MyBeers() {
   const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this beer entry?')) {
       try {
-        const token = localStorage.getItem('auth_token')
-        const response = await fetch(`${API_BASE}/delete-beer`, {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ beer_id: id })
-        })
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}))
-          throw new Error(errorData.error || 'Failed to delete beer')
-        }
-
+        await api.deleteBeer(id)
         // Remove from local state
         setBeers(beers.filter(beer => beer.id !== id))
         alert('Beer deleted successfully!')
