@@ -10,19 +10,9 @@ SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
         try:
-            # Use the SQL function we created in the database schema
-            req = urllib.request.Request(
-                f"{SUPABASE_URL}/rest/v1/rpc/get_monthly_beer_counts",
-                headers={
-                    'apikey': SUPABASE_ANON_KEY,
-                    'Authorization': f'Bearer {SUPABASE_ANON_KEY}',
-                    'Content-Type': 'application/json'
-                },
-                method='POST'
-            )
-            
-            with urllib.request.urlopen(req) as response:
-                monthly_data = json.loads(response.read().decode('utf-8'))
+            # Skip the monthly RPC function and go straight to daily processing
+            # We want daily data, not monthly
+            raise urllib.error.HTTPError(None, 404, 'Skipping monthly function', None, None)
             
             # Transform the data to match the frontend's expected format
             # Group by user and create cumulative totals
@@ -99,10 +89,14 @@ class handler(BaseHTTPRequestHandler):
                     created_at = beer['created_at']
 
                     # Extract date from created_at
-                    date = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
-
-                    # Use YYYY-MM-DD format for days
-                    day_key = date.strftime('%Y-%m-%d')
+                    # Parse the ISO string and just extract the date part
+                    if 'T' in created_at:
+                        # Split on 'T' to get just the date part before time
+                        day_key = created_at.split('T')[0]
+                    else:
+                        # Fallback: parse as datetime and extract date
+                        date = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+                        day_key = date.strftime('%Y-%m-%d')
 
                     user_daily_counts[user_id][day_key] += 1
                 
