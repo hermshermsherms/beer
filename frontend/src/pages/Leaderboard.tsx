@@ -54,12 +54,12 @@ function Leaderboard() {
     fetchLeaderboardData()
   }, [])
 
-  const getMonths = () => {
-    const months = new Set<string>()
+  const getDays = () => {
+    const days = new Set<string>()
     userData.forEach(user => {
-      user.monthly_data.forEach(data => months.add(data.month))
+      user.monthly_data.forEach(data => days.add(data.month))
     })
-    return Array.from(months).sort()
+    return Array.from(days).sort()
   }
 
   const getLeaderboardSummary = () => {
@@ -74,31 +74,27 @@ function Leaderboard() {
   }
 
   const getChartData = () => {
-    const months = getMonths()
+    const days = getDays()
     const colors = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe']
     
     return {
-      labels: months.map((month, index) => {
-        // Handle week format (YYYY-WXX) vs month format (YYYY-MM)
-        if (month.includes('-W')) {
-          // Convert to simple Week 1, Week 2, etc. format
-          return `Week ${index + 1}`
-        } else {
-          const date = new Date(month + '-01')
-          return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' })
-        }
+      labels: days.map(day => {
+        // Format YYYY-MM-DD to a more readable format
+        const date = new Date(day)
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
       }),
       datasets: userData.map((user, index) => ({
         label: user.user_name,
-        data: months.map(month => {
-          const monthData = user.monthly_data.find(d => d.month === month)
-          return monthData ? monthData.total_drinks : 0
+        data: days.map(day => {
+          const dayData = user.monthly_data.find(d => d.month === day)
+          return dayData ? dayData.total_drinks : 0
         }),
         borderColor: colors[index % colors.length],
         backgroundColor: colors[index % colors.length] + '20',
-        tension: 0.4,
-        pointRadius: 4,
-        pointHoverRadius: 6
+        tension: 0.1,
+        pointRadius: 5,
+        pointHoverRadius: 8,
+        fill: false
       }))
     }
   }
@@ -111,7 +107,7 @@ function Leaderboard() {
       },
       title: {
         display: true,
-        text: 'Cumulative Beers Over Time (By Week)'
+        text: 'Cumulative Beers Over Time (By Day)'
       },
       tooltip: {
         mode: 'index' as const,
@@ -124,7 +120,7 @@ function Leaderboard() {
             const colors = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe']
             acc[`label${index}`] = {
               type: 'label',
-              xValue: getMonths().length - 1,
+              xValue: getDays().length - 1,
               yValue: lastDataPoint.total_drinks,
               backgroundColor: 'rgba(255, 255, 255, 0.8)',
               borderColor: colors[index % colors.length],
@@ -158,7 +154,7 @@ function Leaderboard() {
       x: {
         title: {
           display: true,
-          text: 'Weeks'
+          text: 'Days'
         }
       }
     },

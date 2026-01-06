@@ -88,24 +88,23 @@ class handler(BaseHTTPRequestHandler):
                 with urllib.request.urlopen(req) as response:
                     beers_data = json.loads(response.read().decode('utf-8'))
                 
-                # Process the data to create weekly counts
+                # Process the data to create daily counts
                 from collections import defaultdict
                 from datetime import datetime, timedelta
                 
-                user_weekly_counts = defaultdict(lambda: defaultdict(int))
+                user_daily_counts = defaultdict(lambda: defaultdict(int))
                 
                 for beer in beers_data:
                     user_id = beer.get('user_id', 'unknown')
                     created_at = beer['created_at']
 
-                    # Extract week from created_at using ISO week format (Monday as start of week)
+                    # Extract date from created_at
                     date = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
 
-                    # Use ISO week format (year-week)
-                    iso_year, iso_week, _ = date.isocalendar()
-                    week_key = f"{iso_year}-W{iso_week:02d}"
+                    # Use YYYY-MM-DD format for days
+                    day_key = date.strftime('%Y-%m-%d')
 
-                    user_weekly_counts[user_id][week_key] += 1
+                    user_daily_counts[user_id][day_key] += 1
                 
                 # Get all users from the first query to map user_id to names
                 users_req = urllib.request.Request(
@@ -124,23 +123,23 @@ class handler(BaseHTTPRequestHandler):
                 
                 # Convert to frontend format with proper user names
                 formatted_data = []
-                for user_id, weekly_counts in user_weekly_counts.items():
+                for user_id, daily_counts in user_daily_counts.items():
                     user_name = users_map.get(user_id, f"User {user_id}")
-                    weekly_data = []
+                    daily_data = []
                     cumulative_total = 0
                     
-                    # Sort weeks and create cumulative data
-                    for week in sorted(weekly_counts.keys()):
-                        cumulative_total += weekly_counts[week]
-                        weekly_data.append({
-                            "month": week,  # Keep field name as "month" for frontend compatibility
+                    # Sort days and create cumulative data
+                    for day in sorted(daily_counts.keys()):
+                        cumulative_total += daily_counts[day]
+                        daily_data.append({
+                            "month": day,  # Keep field name as "month" for frontend compatibility
                             "total_drinks": cumulative_total
                         })
                     
-                    if weekly_data:  # Only add users who have data
+                    if daily_data:  # Only add users who have data
                         formatted_data.append({
                             "user_name": user_name,
-                            "monthly_data": weekly_data  # Keep field name for frontend compatibility
+                            "monthly_data": daily_data  # Keep field name for frontend compatibility
                         })
                 
                 self.send_response(200)
