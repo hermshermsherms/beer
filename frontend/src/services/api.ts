@@ -105,11 +105,11 @@ class ApiService {
   }
 
   async getMyBeers(): Promise<Beer[]> {
-    return this.request('/beers/my')
+    return this.request('/my-beers')
   }
 
   async getAllBeers(): Promise<Beer[]> {
-    return this.request('/beers/all')
+    return this.request('/all-beers')
   }
 
   async deleteBeer(beerId: string) {
