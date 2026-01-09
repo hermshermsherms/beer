@@ -2,7 +2,52 @@ from http.server import BaseHTTPRequestHandler
 import json
 import os
 import cgi
-from auth_utils import validate_token
+import base64
+from supabase import create_client, Client
+
+def validate_token(authorization_header):
+    """Validate JWT token and return user_id, supabase_client"""
+    if not authorization_header or not authorization_header.startswith('Bearer '):
+        raise Exception("Missing or invalid authorization header")
+    
+    token = authorization_header[7:]  # Remove 'Bearer ' prefix
+    
+    # Get Supabase credentials
+    supabase_url = os.environ.get('SUPABASE_URL')
+    supabase_key = os.environ.get('SUPABASE_ANON_KEY')
+    
+    if not supabase_url or not supabase_key:
+        raise Exception("Supabase configuration missing")
+    
+    try:
+        # Decode JWT token to get user ID
+        parts = token.split('.')
+        if len(parts) != 3:
+            raise Exception("Invalid JWT format")
+        
+        # Decode payload
+        payload_encoded = parts[1]
+        padding = 4 - len(payload_encoded) % 4
+        if padding != 4:
+            payload_encoded += '=' * padding
+            
+        payload_bytes = base64.urlsafe_b64decode(payload_encoded)
+        payload = json.loads(payload_bytes.decode('utf-8'))
+        
+        user_id = payload.get('sub')
+        if not user_id:
+            raise Exception("No user ID in token")
+        
+        # Create authenticated Supabase client
+        supabase: Client = create_client(supabase_url, supabase_key)
+        supabase.postgrest.session.headers.update({
+            "Authorization": f"Bearer {token}"
+        })
+        
+        return user_id, supabase
+        
+    except Exception as e:
+        raise Exception(f"Token validation failed: {str(e)}")
 
 class handler(BaseHTTPRequestHandler):
     def do_POST(self):
