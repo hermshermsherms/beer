@@ -1,7 +1,8 @@
 from http.server import BaseHTTPRequestHandler
 import json
 import os
-import requests
+import urllib.request
+import urllib.parse
 
 # Supabase configuration
 SUPABASE_URL = os.environ.get('SUPABASE_URL')
@@ -43,21 +44,20 @@ class handler(BaseHTTPRequestHandler):
                     "password_hash": password_hash
                 }
                 
-                response = requests.post(
+                req = urllib.request.Request(
                     f"{SUPABASE_URL}/rest/v1/users",
-                    json=user_data,
+                    data=json.dumps(user_data).encode('utf-8'),
                     headers={
                         'Content-Type': 'application/json',
                         'apikey': SUPABASE_ANON_KEY,
                         'Authorization': f'Bearer {SUPABASE_ANON_KEY}',
                         'Prefer': 'return=representation'
-                    }
+                    },
+                    method='POST'
                 )
                 
-                if response.status_code != 201:
-                    raise Exception(f"Supabase error: {response.text}")
-                
-                result_data = response.json()
+                with urllib.request.urlopen(req) as response:
+                    result_data = json.loads(response.read().decode('utf-8'))
                     
                 result = {
                     "message": "User registered successfully",
