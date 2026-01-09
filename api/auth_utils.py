@@ -42,11 +42,13 @@ def validate_token(authorization_header):
         if not user_id:
             raise Exception("No user ID in token")
         
-        # Create Supabase client and set the session with the JWT token
+        # Create Supabase client
         supabase: Client = create_client(supabase_url, supabase_key)
         
-        # Set the session with the provided token
-        supabase.postgrest.auth(token)
+        # Set auth headers for authenticated requests
+        supabase.postgrest.session.headers.update({
+            "Authorization": f"Bearer {token}"
+        })
         
         return user_id, supabase
         
