@@ -61,7 +61,14 @@ class handler(BaseHTTPRequestHandler):
             query_params = urllib.parse.parse_qs(parsed_url.query)
             
             if 'beer_id' not in query_params:
-                self.send_error(400, "Missing beer_id parameter")
+                error_result = {"error": "Missing beer_id parameter"}
+                self.send_response(400)
+                self.send_header('Content-type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.send_header('Access-Control-Allow-Methods', 'DELETE, OPTIONS')
+                self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+                self.end_headers()
+                self.wfile.write(json.dumps(error_result).encode())
                 return
             
             beer_id = query_params['beer_id'][0]
@@ -73,7 +80,14 @@ class handler(BaseHTTPRequestHandler):
                 ).eq("user_id", user_id).execute()
                 
                 if not beer_check.data:
-                    self.send_error(404, "Beer not found or not owned by user")
+                    error_result = {"error": "Beer not found or not owned by user"}
+                    self.send_response(404)
+                    self.send_header('Content-type', 'application/json')
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.send_header('Access-Control-Allow-Methods', 'DELETE, OPTIONS')
+                    self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+                    self.end_headers()
+                    self.wfile.write(json.dumps(error_result).encode())
                     return
                 
                 # Delete the beer
@@ -85,7 +99,14 @@ class handler(BaseHTTPRequestHandler):
                 
             except Exception as e:
                 print(f"Database delete error: {e}")
-                self.send_error(400, f"Failed to delete beer: {str(e)}")
+                error_result = {"error": f"Failed to delete beer: {str(e)}"}
+                self.send_response(400)
+                self.send_header('Content-type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.send_header('Access-Control-Allow-Methods', 'DELETE, OPTIONS')
+                self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+                self.end_headers()
+                self.wfile.write(json.dumps(error_result).encode())
                 return
             
             # Send successful response
@@ -99,9 +120,23 @@ class handler(BaseHTTPRequestHandler):
             
         except Exception as e:
             if "Token validation failed" in str(e) or "Invalid token" in str(e):
-                self.send_error(401, str(e))
+                error_result = {"error": str(e)}
+                self.send_response(401)
+                self.send_header('Content-type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.send_header('Access-Control-Allow-Methods', 'DELETE, OPTIONS')
+                self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+                self.end_headers()
+                self.wfile.write(json.dumps(error_result).encode())
             else:
-                self.send_error(500, f"Internal server error: {str(e)}")
+                error_result = {"error": f"Internal server error: {str(e)}"}
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.send_header('Access-Control-Allow-Methods', 'DELETE, OPTIONS')
+                self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+                self.end_headers()
+                self.wfile.write(json.dumps(error_result).encode())
     
     def do_OPTIONS(self):
         self.send_response(200)
