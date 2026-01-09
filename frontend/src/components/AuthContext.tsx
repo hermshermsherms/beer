@@ -17,12 +17,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const extractUserIdFromToken = (token: string) => {
     try {
-      // Our token format is "token_<user_id>"
-      if (token.startsWith('token_')) {
-        return token.substring(6) // Remove "token_" prefix
-      }
-      return null
+      // Parse JWT token to extract user ID
+      const payload = JSON.parse(atob(token.split('.')[1]))
+      return payload.sub || null // 'sub' is the user ID in Supabase JWTs
     } catch (error) {
+      console.error('Failed to parse JWT token:', error)
       return null
     }
   }

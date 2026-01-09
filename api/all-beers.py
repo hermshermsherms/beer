@@ -18,26 +18,24 @@ class handler(BaseHTTPRequestHandler):
             supabase: Client = create_client(supabase_url, supabase_key)
             
             try:
-                # Get all beers with user information
-                # Note: This works with RLS because we're just reading public beer data
-                response = supabase.table("beers").select("""
-                    id,
-                    image_url,
-                    note,
-                    created_at,
-                    user_id,
-                    users!beers_user_id_fkey(name, email)
-                """).order("created_at", desc=True).execute()
+                # Get all beers - we'll get user names separately since we can't join auth.users
+                response = supabase.table("beers").select(
+                    "id, image_url, note, created_at, user_id"
+                ).order("created_at", desc=True).execute()
                 
-                # Format the response to include user name
+                # Get user names from auth.users for each beer
                 beers = []
                 for beer in response.data:
-                    user_info = beer.get("users")
                     user_name = "Unknown User"
                     
-                    if user_info:
-                        # If we have user info from the join
-                        user_name = user_info.get("name", "Unknown User")
+                    try:
+                        # Try to get user info from auth.users
+                        user_response = supabase.auth.admin.get_user_by_id(beer["user_id"])
+                        if user_response.user and user_response.user.user_metadata:
+                            user_name = user_response.user.user_metadata.get("name", "Unknown User")
+                    except:
+                        # If we can't get user info, keep default
+                        pass
                     
                     beers.append({
                         "id": beer["id"],
