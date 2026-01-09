@@ -11,7 +11,14 @@ class handler(BaseHTTPRequestHandler):
             supabase_key = os.environ.get('SUPABASE_ANON_KEY')
             
             if not supabase_url or not supabase_key:
-                self.send_error(500, "Supabase configuration missing")
+                error_result = {"error": "Supabase configuration missing"}
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
+                self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+                self.end_headers()
+                self.wfile.write(json.dumps(error_result).encode())
                 return
             
             # Initialize Supabase client
@@ -19,7 +26,14 @@ class handler(BaseHTTPRequestHandler):
                 supabase: Client = create_client(supabase_url, supabase_key)
             except Exception as client_error:
                 print(f"Supabase client creation failed: {client_error}")
-                self.send_error(500, f"Supabase connection failed: {str(client_error)}")
+                error_result = {"error": f"Supabase connection failed: {str(client_error)}"}
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
+                self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+                self.end_headers()
+                self.wfile.write(json.dumps(error_result).encode())
                 return
             
             # Parse request body
@@ -32,7 +46,14 @@ class handler(BaseHTTPRequestHandler):
             name = data.get('name')
             
             if not all([email, password, name]):
-                self.send_error(400, "Missing required fields")
+                error_result = {"error": "Missing required fields"}
+                self.send_response(400)
+                self.send_header('Content-type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
+                self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+                self.end_headers()
+                self.wfile.write(json.dumps(error_result).encode())
                 return
             
             # Use Supabase Auth for registration
@@ -58,7 +79,14 @@ class handler(BaseHTTPRequestHandler):
                     
             except Exception as e:
                 print(f"Supabase registration error: {e}")
-                self.send_error(400, f"Registration failed: {str(e)}")
+                error_result = {"error": f"Registration failed: {str(e)}"}
+                self.send_response(400)
+                self.send_header('Content-type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
+                self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+                self.end_headers()
+                self.wfile.write(json.dumps(error_result).encode())
                 return
             
             # Send successful response
@@ -71,7 +99,14 @@ class handler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps(result).encode())
             
         except Exception as e:
-            self.send_error(500, f"Internal server error: {str(e)}")
+            error_result = {"error": f"Internal server error: {str(e)}"}
+            self.send_response(500)
+            self.send_header('Content-type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
+            self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+            self.end_headers()
+            self.wfile.write(json.dumps(error_result).encode())
     
     def do_OPTIONS(self):
         self.send_response(200)
