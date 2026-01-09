@@ -15,7 +15,12 @@ class handler(BaseHTTPRequestHandler):
                 return
             
             # Initialize Supabase client
-            supabase: Client = create_client(supabase_url, supabase_key)
+            try:
+                supabase: Client = create_client(supabase_url, supabase_key)
+            except Exception as client_error:
+                print(f"Supabase client creation failed: {client_error}")
+                self.send_error(500, f"Supabase connection failed: {str(client_error)}")
+                return
             
             # Parse request body
             content_length = int(self.headers['Content-Length'])
