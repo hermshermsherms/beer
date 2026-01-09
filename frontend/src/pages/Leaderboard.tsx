@@ -195,25 +195,25 @@ function Leaderboard() {
       ) : (
         <>
           {/* Summary Table */}
-          <div className="table-wrapper" style={{ marginBottom: '2rem', maxWidth: '320px' }}>
-            <table className="table leaderboard-table" style={{ width: '100%', tableLayout: 'fixed' }}>
+          <div className="table-wrapper" style={{ marginBottom: '2rem', width: '100%', maxWidth: '400px', overflowX: 'auto' }}>
+            <table className="table leaderboard-table" style={{ width: '100%', minWidth: '280px', tableLayout: 'fixed' }}>
               <thead>
                 <tr>
-                  <th style={{ textAlign: 'center', width: '15%', padding: '0.5rem 0.25rem' }}>#</th>
-                  <th style={{ width: '60%', padding: '0.5rem 0.5rem' }}>Name</th>
-                  <th style={{ textAlign: 'center', width: '25%', padding: '0.5rem 0.25rem' }}>Count</th>
+                  <th style={{ textAlign: 'center', width: '50px', padding: '0.5rem 0.25rem', fontSize: '0.9rem' }}>#</th>
+                  <th style={{ padding: '0.5rem 0.25rem', fontSize: '0.9rem' }}>Name</th>
+                  <th style={{ textAlign: 'center', width: '60px', padding: '0.5rem 0.25rem', fontSize: '0.9rem' }}>Count</th>
                 </tr>
               </thead>
               <tbody>
                 {getLeaderboardSummary().map((user, index) => (
                   <tr key={user.user_name}>
-                    <td style={{ textAlign: 'center', fontWeight: 'bold', fontSize: '1.1rem', padding: '0.5rem 0.25rem' }}>
+                    <td style={{ textAlign: 'center', fontWeight: 'bold', fontSize: '1rem', padding: '0.5rem 0.25rem' }}>
                       {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index + 1}
                     </td>
-                    <td style={{ fontWeight: index < 3 ? 'bold' : 'normal', padding: '0.5rem 0.5rem' }}>
+                    <td style={{ fontWeight: index < 3 ? 'bold' : 'normal', padding: '0.5rem 0.25rem', fontSize: '0.9rem' }}>
                       {user.user_name}
                     </td>
-                    <td style={{ textAlign: 'center', fontWeight: 'bold', color: '#667eea', padding: '0.5rem 0.25rem' }}>
+                    <td style={{ textAlign: 'center', fontWeight: 'bold', color: '#667eea', padding: '0.5rem 0.25rem', fontSize: '0.95rem' }}>
                       {user.total_beers}
                     </td>
                   </tr>
