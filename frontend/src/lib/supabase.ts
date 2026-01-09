@@ -6,24 +6,28 @@ export const supabase = createClient(
   SUPABASE_CONFIG.anonKey
 )
 
-// Helper to ensure supabase client is authenticated
-const getAuthenticatedSupabase = () => {
-  const token = localStorage.getItem('auth_token')
-  if (token) {
-    supabase.auth.setSession({
-      access_token: token,
-      refresh_token: '', // Not needed for our use case
-    })
-  }
-  return supabase
-}
-
 export const uploadBeerImage = async (file: File, userId: string) => {
   const fileExt = file.name.split('.').pop()
   const fileName = `${userId}/${Date.now()}.${fileExt}`
   
-  // Get authenticated supabase client
-  const authenticatedSupabase = getAuthenticatedSupabase()
+  // Get the JWT token and set it directly on the request
+  const token = localStorage.getItem('auth_token')
+  if (!token) {
+    throw new Error('No authentication token found')
+  }
+  
+  // Create a new supabase client instance with the auth header
+  const authenticatedSupabase = createClient(
+    SUPABASE_CONFIG.url,
+    SUPABASE_CONFIG.anonKey,
+    {
+      global: {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    }
+  )
   
   const { data, error } = await authenticatedSupabase.storage
     .from('beer-images')
