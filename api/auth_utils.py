@@ -1,4 +1,6 @@
 import os
+import json
+import base64
 from supabase import create_client, Client
 
 def validate_token(authorization_header):
@@ -18,17 +20,35 @@ def validate_token(authorization_header):
     if not supabase_url or not supabase_key:
         raise Exception("Supabase configuration missing")
     
-    # Initialize Supabase client
-    supabase: Client = create_client(supabase_url, supabase_key)
-    
     try:
-        # Validate token and get user
-        user_response = supabase.auth.get_user(token)
+        # Decode JWT token to get user ID
+        # JWT format: header.payload.signature
+        parts = token.split('.')
+        if len(parts) != 3:
+            raise Exception("Invalid JWT format")
         
-        if not user_response.user:
-            raise Exception("Invalid token")
+        # Decode the payload (second part)
+        payload_encoded = parts[1]
+        # Add padding if needed for base64 decoding
+        padding = 4 - len(payload_encoded) % 4
+        if padding != 4:
+            payload_encoded += '=' * padding
+            
+        payload_bytes = base64.urlsafe_b64decode(payload_encoded)
+        payload = json.loads(payload_bytes.decode('utf-8'))
         
-        return user_response.user.id, supabase
+        # Extract user ID from JWT
+        user_id = payload.get('sub')
+        if not user_id:
+            raise Exception("No user ID in token")
+        
+        # Create Supabase client and set the session with the JWT token
+        supabase: Client = create_client(supabase_url, supabase_key)
+        
+        # Set the session with the provided token
+        supabase.postgrest.auth(token)
+        
+        return user_id, supabase
         
     except Exception as e:
         raise Exception(f"Token validation failed: {str(e)}")
