@@ -101,7 +101,14 @@ function MyBeers() {
               {beers.map((beer) => (
                 <tr key={beer.id}>
                   <td>
-                    <img src={beer.image_url} alt="Beer" className="beer-image" />
+                    <img 
+                      src={beer.image_url} 
+                      alt="Beer" 
+                      className="beer-image"
+                      onError={(e) => {
+                        e.currentTarget.src = 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&h=200&fit=crop&q=80'
+                      }}
+                    />
                   </td>
                   <td>{beer.note}</td>
                   <td>{formatDate(beer.created_at)}</td>

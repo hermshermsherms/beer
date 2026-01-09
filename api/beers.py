@@ -66,18 +66,31 @@ class handler(BaseHTTPRequestHandler):
             data = json.loads(post_data.decode('utf-8'))
             
             # Get note from JSON
-            note = data.get('note')
+            note = data.get('note', '').strip()
             if not note:
-                self.send_error(400, "Missing note field")
+                error_result = {"error": "Please add a description for your beer"}
+                self.send_response(400)
+                self.send_header('Content-type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
+                self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+                self.end_headers()
+                self.wfile.write(json.dumps(error_result).encode())
                 return
                 
             if len(note) > 250:
-                self.send_error(400, "Note too long (max 250 characters)")
+                error_result = {"error": "Description must be 250 characters or less"}
+                self.send_response(400)
+                self.send_header('Content-type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
+                self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+                self.end_headers()
+                self.wfile.write(json.dumps(error_result).encode())
                 return
             
-            # For now, use a placeholder image URL
-            # TODO: Implement proper image upload later
-            image_url = "https://via.placeholder.com/300x200/0ea5e9/ffffff?text=Beer"
+            # Use a reliable beer placeholder image
+            image_url = "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&h=200&fit=crop&q=80"
             
             # Skip image upload for now - using placeholder
             

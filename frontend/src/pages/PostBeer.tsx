@@ -17,13 +17,18 @@ function PostBeer() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
+    if (!note.trim()) {
+      alert('Please add a description for your beer')
+      return
+    }
+
     if (!image) {
       alert('Please select an image')
       return
     }
 
     if (note.length > 250) {
-      alert('Note must be 250 characters or less')
+      alert('Description must be 250 characters or less')
       return
     }
 

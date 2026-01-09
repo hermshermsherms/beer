@@ -18,13 +18,62 @@ class handler(BaseHTTPRequestHandler):
             supabase: Client = create_client(supabase_url, supabase_key)
             
             try:
-                # Call the stored function for monthly beer counts
-                response = supabase.rpc("get_monthly_beer_counts").execute()
-                result = response.data
+                # Get leaderboard data directly instead of using RPC
+                # First get all beers with their creation dates and user_ids
+                beers_response = supabase.table("beers").select(
+                    "user_id, created_at"
+                ).execute()
+                
+                # Process the data to create monthly counts
+                monthly_counts = {}
+                for beer in beers_response.data:
+                    user_id = beer["user_id"]
+                    created_at = beer["created_at"]
+                    
+                    # Extract year-month from created_at
+                    if created_at:
+                        try:
+                            from datetime import datetime
+                            # Parse the timestamp and extract month
+                            dt = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+                            month_key = dt.strftime('%Y-%m')
+                            
+                            if month_key not in monthly_counts:
+                                monthly_counts[month_key] = {}
+                            
+                            if user_id not in monthly_counts[month_key]:
+                                monthly_counts[month_key][user_id] = 0
+                            
+                            monthly_counts[month_key][user_id] += 1
+                            
+                        except Exception as date_error:
+                            print(f"Date parsing error: {date_error}")
+                            continue
+                
+                # Format the result to match the expected structure
+                result = []
+                for month, users in monthly_counts.items():
+                    for user_id, count in users.items():
+                        result.append({
+                            "user_name": f"User {user_id[:8]}...",  # Simplified user name for now
+                            "month": month,
+                            "total_drinks": count
+                        })
+                
+                # Sort by month desc, then by total_drinks desc
+                result.sort(key=lambda x: (x["month"], -x["total_drinks"]), reverse=True)
                 
             except Exception as e:
                 print(f"Database query error: {e}")
-                self.send_error(400, f"Failed to fetch leaderboard: {str(e)}")
+                # Return JSON error instead of HTML
+                error_result = {"error": f"Failed to fetch leaderboard: {str(e)}"}
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.send_header('Access-Control-Allow-Methods', 'GET, OPTIONS')
+                self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+                self.end_headers()
+                self.wfile.write(json.dumps(error_result).encode())
                 return
             
             # Send successful response
@@ -37,7 +86,15 @@ class handler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps(result).encode())
             
         except Exception as e:
-            self.send_error(500, f"Internal server error: {str(e)}")
+            # Return JSON error instead of HTML
+            error_result = {"error": f"Internal server error: {str(e)}"}
+            self.send_response(500)
+            self.send_header('Content-type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.send_header('Access-Control-Allow-Methods', 'GET, OPTIONS')
+            self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+            self.end_headers()
+            self.wfile.write(json.dumps(error_result).encode())
     
     def do_OPTIONS(self):
         self.send_response(200)
