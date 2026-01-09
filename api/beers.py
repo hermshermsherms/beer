@@ -65,8 +65,10 @@ class handler(BaseHTTPRequestHandler):
             post_data = self.rfile.read(content_length)
             data = json.loads(post_data.decode('utf-8'))
             
-            # Get note from JSON
+            # Get note and image_url from JSON
             note = data.get('note', '').strip()
+            image_url = data.get('image_url', 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&h=200&fit=crop&q=80')
+            
             if not note:
                 error_result = {"error": "Please add a description for your beer"}
                 self.send_response(400)
@@ -88,9 +90,6 @@ class handler(BaseHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(json.dumps(error_result).encode())
                 return
-            
-            # Use a reliable beer placeholder image
-            image_url = "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&h=200&fit=crop&q=80"
             
             # Skip image upload for now - using placeholder
             

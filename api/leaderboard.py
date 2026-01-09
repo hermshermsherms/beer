@@ -50,18 +50,33 @@ class handler(BaseHTTPRequestHandler):
                             print(f"Date parsing error: {date_error}")
                             continue
                 
-                # Format the result to match the expected structure
-                result = []
+                # Format the result to match the expected frontend structure
+                # Group by user_id and create monthly_data arrays
+                user_groups = {}
                 for month, users in monthly_counts.items():
                     for user_id, count in users.items():
-                        result.append({
-                            "user_name": f"User {user_id[:8]}...",  # Simplified user name for now
+                        user_name = f"User {user_id[:8]}..."
+                        
+                        if user_name not in user_groups:
+                            user_groups[user_name] = []
+                        
+                        user_groups[user_name].append({
                             "month": month,
                             "total_drinks": count
                         })
                 
-                # Sort by month desc, then by total_drinks desc
-                result.sort(key=lambda x: (x["month"], -x["total_drinks"]), reverse=True)
+                # Convert to expected format: array of users with monthly_data
+                result = []
+                for user_name, monthly_data in user_groups.items():
+                    # Sort monthly_data by month
+                    monthly_data.sort(key=lambda x: x["month"], reverse=True)
+                    result.append({
+                        "user_name": user_name,
+                        "monthly_data": monthly_data
+                    })
+                
+                # Sort users by total drinks (sum of all months)
+                result.sort(key=lambda x: sum(m["total_drinks"] for m in x["monthly_data"]), reverse=True)
                 
             except Exception as e:
                 print(f"Database query error: {e}")

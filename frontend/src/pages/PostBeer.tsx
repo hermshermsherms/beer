@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useAuth } from '../components/AuthContext'
 import { API_BASE } from '../config'
+import { uploadBeerImage } from '../lib/supabase'
 
 function PostBeer() {
   const { userId } = useAuth()
@@ -40,8 +41,21 @@ function PostBeer() {
     setUploading(true)
     
     try {
-      // For now, send JSON instead of FormData (skip image upload)
+      // First upload image to Supabase storage
       const token = localStorage.getItem('auth_token')
+      let imageUrl = "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&h=200&fit=crop&q=80" // fallback
+      
+      if (image) {
+        try {
+          // Upload image using Supabase client
+          const uploadedImageUrl = await uploadBeerImage(image, userId!)
+          imageUrl = uploadedImageUrl
+          console.log('Image uploaded successfully:', imageUrl)
+        } catch (imageError) {
+          console.error('Image upload failed:', imageError)
+          // Continue with placeholder image if upload fails
+        }
+      }
       
       const response = await fetch(`${API_BASE}/beers`, {
         method: 'POST',
@@ -49,7 +63,7 @@ function PostBeer() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ note })
+        body: JSON.stringify({ note, image_url: imageUrl })
       })
       
       if (!response.ok) {
