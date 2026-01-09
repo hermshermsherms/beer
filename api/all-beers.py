@@ -23,19 +23,19 @@ class handler(BaseHTTPRequestHandler):
                     "id, image_url, note, created_at, user_id"
                 ).order("created_at", desc=True).execute()
                 
-                # Get user names from auth.users for each beer
+                # Get user names using RPC function
                 beers = []
                 for beer in response.data:
                     user_name = "Unknown User"
                     
                     try:
-                        # Try to get user info from auth.users
-                        user_response = supabase.auth.admin.get_user_by_id(beer["user_id"])
-                        if user_response.user and user_response.user.user_metadata:
-                            user_name = user_response.user.user_metadata.get("name", "Unknown User")
-                    except:
-                        # If we can't get user info, keep default
-                        pass
+                        # Use RPC function to get user name from auth metadata
+                        user_info = supabase.rpc('get_user_name', {'user_id': beer["user_id"]}).execute()
+                        if user_info.data:
+                            user_name = user_info.data
+                    except Exception as rpc_error:
+                        print(f"RPC error for user {beer['user_id']}: {rpc_error}")
+                        # Keep default "Unknown User"
                     
                     beers.append({
                         "id": beer["id"],
