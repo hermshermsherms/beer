@@ -37,12 +37,12 @@ except Exception as e:
 security = HTTPBearer()
 
 class UserCreate(BaseModel):
-    username: str
+    email: str
     password: str
     name: str
 
 class UserLogin(BaseModel):
-    username: str
+    email: str
     password: str
 
 class BeerPost(BaseModel):
@@ -53,25 +53,21 @@ async def register(user: UserCreate):
     try:
         # Create user account
         response = supabase.auth.sign_up({
-            "email": f"{user.username}@beerapp.local",
+            "email": user.email,
             "password": user.password,
             "options": {
                 "data": {
-                    "username": user.username,
                     "name": user.name
                 }
             }
         })
         
         if response.user:
-            # Insert user profile
-            supabase.table("users").insert({
-                "id": response.user.id,
-                "username": user.username,
-                "name": user.name
-            }).execute()
-            
-            return {"message": "User registered successfully", "user_id": response.user.id}
+            return {
+                "message": "User registered successfully", 
+                "user_id": response.user.id,
+                "access_token": response.session.access_token
+            }
         else:
             raise HTTPException(status_code=400, detail="Registration failed")
     except Exception as e:
@@ -81,7 +77,7 @@ async def register(user: UserCreate):
 async def login(user: UserLogin):
     try:
         response = supabase.auth.sign_in_with_password({
-            "email": f"{user.username}@beerapp.local",
+            "email": user.email,
             "password": user.password
         })
         
