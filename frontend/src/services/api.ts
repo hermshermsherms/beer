@@ -113,9 +113,8 @@ class ApiService {
   }
 
   async deleteBeer(beerId: string) {
-    return this.request('/delete-beer', {
-      method: 'DELETE',
-      body: { beer_id: beerId }
+    return this.request(`/delete-beer?beer_id=${encodeURIComponent(beerId)}`, {
+      method: 'DELETE'
     })
   }
 
