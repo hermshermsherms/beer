@@ -23,13 +23,28 @@ class handler(BaseHTTPRequestHandler):
                     "user_id, created_at"
                 ).execute()
                 
-                # For now, use "Jeremy" as the display name since we know that's the primary user
-                # In a production app, we'd store names in a user_profiles table or extract from auth metadata
+                # Get user names using RPC function to access auth.users metadata
                 user_ids = set(beer["user_id"] for beer in beers_response.data)
                 user_names = {}
                 
-                for user_id in user_ids:
-                    user_names[user_id] = "Jeremy"
+                # Try to get user names via RPC function first
+                try:
+                    for user_id in user_ids:
+                        try:
+                            # Call RPC function to get user name from auth metadata
+                            user_info = supabase.rpc('get_user_name', {'user_id': user_id}).execute()
+                            if user_info.data:
+                                user_names[user_id] = user_info.data
+                            else:
+                                user_names[user_id] = f"User {user_id[:8]}..."
+                        except Exception as rpc_error:
+                            print(f"RPC error for user {user_id}: {rpc_error}")
+                            user_names[user_id] = f"User {user_id[:8]}..."
+                except Exception as e:
+                    print(f"RPC function not available: {e}")
+                    # Fallback to user ID display
+                    for user_id in user_ids:
+                        user_names[user_id] = f"User {user_id[:8]}..."
                 
                 # Process the data to create daily counts
                 daily_counts = {}
