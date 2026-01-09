@@ -7,10 +7,28 @@ export const supabase = createClient(
 )
 
 export const uploadBeerImage = async (file: File, userId: string) => {
+  // Get the JWT token from localStorage
+  const token = localStorage.getItem('auth_token')
+  if (!token) {
+    throw new Error('No authentication token found')
+  }
+  
+  // Create a new Supabase client with the JWT token
+  const authenticatedSupabase = createClient(
+    SUPABASE_CONFIG.url,
+    SUPABASE_CONFIG.anonKey
+  )
+  
+  // Set the auth session with the JWT token
+  await authenticatedSupabase.auth.setSession({
+    access_token: token,
+    refresh_token: ''
+  })
+  
   const fileExt = file.name.split('.').pop()
   const fileName = `${userId}/${Date.now()}.${fileExt}`
   
-  const { data, error } = await supabase.storage
+  const { data, error } = await authenticatedSupabase.storage
     .from('beer-images')
     .upload(fileName, file)
     
@@ -18,7 +36,7 @@ export const uploadBeerImage = async (file: File, userId: string) => {
     throw error
   }
   
-  const { data: { publicUrl } } = supabase.storage
+  const { data: { publicUrl } } = authenticatedSupabase.storage
     .from('beer-images')
     .getPublicUrl(fileName)
     
