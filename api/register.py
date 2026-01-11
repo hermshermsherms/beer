@@ -72,7 +72,8 @@ class handler(BaseHTTPRequestHandler):
                     result = {
                         "message": "User registered successfully",
                         "user_id": response.user.id,
-                        "access_token": response.session.access_token
+                        "access_token": response.session.access_token,
+                        "refresh_token": response.session.refresh_token
                     }
                 else:
                     raise Exception("Registration failed - no user created")

@@ -29,11 +29,10 @@ class handler(BaseHTTPRequestHandler):
             post_data = self.rfile.read(content_length)
             data = json.loads(post_data.decode('utf-8'))
             
-            email = data.get('email')
-            password = data.get('password')
+            refresh_token = data.get('refresh_token')
             
-            if not all([email, password]):
-                error_result = {"error": "Missing email or password"}
+            if not refresh_token:
+                error_result = {"error": "Missing refresh token"}
                 self.send_response(400)
                 self.send_header('Content-type', 'application/json')
                 self.send_header('Access-Control-Allow-Origin', '*')
@@ -43,26 +42,23 @@ class handler(BaseHTTPRequestHandler):
                 self.wfile.write(json.dumps(error_result).encode())
                 return
             
-            # Use Supabase Auth for login
+            # Use Supabase Auth to refresh the session
             try:
-                response = supabase.auth.sign_in_with_password({
-                    "email": email,
-                    "password": password
-                })
+                response = supabase.auth.refresh_session(refresh_token)
                 
                 if response.session and response.user:
                     result = {
                         "access_token": response.session.access_token,
                         "refresh_token": response.session.refresh_token,
                         "user_id": response.user.id,
-                        "message": "Logged in successfully"
+                        "message": "Token refreshed successfully"
                     }
                 else:
-                    raise Exception("Invalid credentials")
+                    raise Exception("Token refresh failed")
                     
             except Exception as e:
-                print(f"Supabase login error: {e}")
-                error_result = {"error": "Invalid email or password"}
+                print(f"Supabase refresh error: {e}")
+                error_result = {"error": "Invalid or expired refresh token"}
                 self.send_response(401)
                 self.send_header('Content-type', 'application/json')
                 self.send_header('Access-Control-Allow-Origin', '*')
