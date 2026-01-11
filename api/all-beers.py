@@ -11,7 +11,14 @@ class handler(BaseHTTPRequestHandler):
             supabase_key = os.environ.get('SUPABASE_ANON_KEY')
             
             if not supabase_url or not supabase_key:
-                self.send_error(500, "Supabase configuration missing")
+                error_result = {"error": "Supabase configuration missing"}
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.send_header('Access-Control-Allow-Methods', 'GET, OPTIONS')
+                self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+                self.end_headers()
+                self.wfile.write(json.dumps(error_result).encode())
                 return
             
             # Initialize Supabase client
@@ -50,7 +57,14 @@ class handler(BaseHTTPRequestHandler):
                 
             except Exception as e:
                 print(f"Database query error: {e}")
-                self.send_error(400, f"Failed to fetch beers: {str(e)}")
+                error_result = {"error": f"Failed to fetch beers: {str(e)}"}
+                self.send_response(400)
+                self.send_header('Content-type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.send_header('Access-Control-Allow-Methods', 'GET, OPTIONS')
+                self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+                self.end_headers()
+                self.wfile.write(json.dumps(error_result).encode())
                 return
             
             # Send successful response
@@ -63,7 +77,14 @@ class handler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps(result).encode())
             
         except Exception as e:
-            self.send_error(500, f"Internal server error: {str(e)}")
+            error_result = {"error": f"Internal server error: {str(e)}"}
+            self.send_response(500)
+            self.send_header('Content-type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.send_header('Access-Control-Allow-Methods', 'GET, OPTIONS')
+            self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+            self.end_headers()
+            self.wfile.write(json.dumps(error_result).encode())
     
     def do_OPTIONS(self):
         self.send_response(200)

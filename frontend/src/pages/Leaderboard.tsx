@@ -87,7 +87,20 @@ function Leaderboard() {
         label: user.user_name,
         data: days.map(day => {
           const dayData = user.monthly_data.find(d => d.month === day)
-          return dayData ? dayData.total_drinks : 0
+          if (dayData) {
+            return dayData.total_drinks
+          } else {
+            // If no data for this day, find the last known cumulative total before this day
+            const dayIndex = days.indexOf(day)
+            for (let i = dayIndex - 1; i >= 0; i--) {
+              const prevDay = days[i]
+              const prevDayData = user.monthly_data.find(d => d.month === prevDay)
+              if (prevDayData) {
+                return prevDayData.total_drinks
+              }
+            }
+            return 0 // No previous data found
+          }
         }),
         borderColor: colors[index % colors.length],
         backgroundColor: colors[index % colors.length] + '20',

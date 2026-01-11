@@ -65,7 +65,14 @@ class handler(BaseHTTPRequestHandler):
                 
             except Exception as e:
                 print(f"Database query error: {e}")
-                self.send_error(400, f"Failed to fetch beers: {str(e)}")
+                error_result = {"error": f"Failed to fetch beers: {str(e)}"}
+                self.send_response(400)
+                self.send_header('Content-type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.send_header('Access-Control-Allow-Methods', 'GET, OPTIONS')
+                self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+                self.end_headers()
+                self.wfile.write(json.dumps(error_result).encode())
                 return
             
             # Send successful response
@@ -78,10 +85,24 @@ class handler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps(result).encode())
             
         except Exception as e:
-            if "Token validation failed" in str(e) or "Invalid token" in str(e):
-                self.send_error(401, str(e))
+            if "Token validation failed" in str(e) or "Invalid token" in str(e) or "JWT expired" in str(e):
+                error_result = {"error": str(e), "code": "TOKEN_EXPIRED"}
+                self.send_response(401)
+                self.send_header('Content-type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.send_header('Access-Control-Allow-Methods', 'GET, OPTIONS')
+                self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+                self.end_headers()
+                self.wfile.write(json.dumps(error_result).encode())
             else:
-                self.send_error(500, f"Internal server error: {str(e)}")
+                error_result = {"error": f"Internal server error: {str(e)}"}
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.send_header('Access-Control-Allow-Methods', 'GET, OPTIONS')
+                self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+                self.end_headers()
+                self.wfile.write(json.dumps(error_result).encode())
     
     def do_OPTIONS(self):
         self.send_response(200)

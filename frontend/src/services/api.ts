@@ -60,8 +60,25 @@ class ApiService {
     })
 
     if (!response.ok) {
-      const error = await response.text()
-      throw new Error(`API Error: ${error}`)
+      const errorText = await response.text()
+      
+      // Try to parse as JSON first
+      try {
+        const errorJson = JSON.parse(errorText)
+        if (errorJson.code === 'TOKEN_EXPIRED' || response.status === 401) {
+          // Token expired, clear it and throw specific error
+          this.clearToken()
+          throw new Error('Your session has expired. Please log in again.')
+        }
+        throw new Error(errorJson.error || `API Error: ${response.status}`)
+      } catch (parseError) {
+        // If not JSON, check if it's an HTML error page mentioning JWT expired
+        if (errorText.includes('JWT expired')) {
+          this.clearToken()
+          throw new Error('Your session has expired. Please log in again.')
+        }
+        throw new Error(`API Error: ${errorText}`)
+      }
     }
 
     return response.json()
